@@ -1,0 +1,87 @@
+<div class="container">
+
+  <div class="page-header">
+
+    <span class="eyebrow">Library Management</span>
+
+    <h1>Categories</h1>
+
+    <p>
+      Organize your books by category.
+    </p>
+
+    <%= link_to "+ Add Category",
+                new_category_path,
+                class: "btn btn-primary" %>
+
+  </div>
+
+  <% if @categories.any? %>
+
+    <div class="books-grid">
+
+      <% @categories.each do |category| %>
+
+        <article class="book-card">
+
+          <div class="book-icon">
+            
+          </div>
+
+          <h2>
+            <%= category.name %>
+          </h2>
+
+          <div class="book-details">
+
+            <div class="book-detail">
+              <strong>Books</strong>
+
+              <span>
+                <%= category.books.count %>
+              </span>
+            </div>
+
+          </div>
+
+          <div class="book-actions">
+
+            <%= button_to "Delete",
+                          category_path(category),
+                          method: :delete,
+                          class: "btn btn-danger",
+                          data: {
+                            turbo_confirm: "Delete #{category.name}?"
+                          } %>
+
+          </div>
+
+        </article>
+
+      <% end %>
+
+    </div>
+
+  <% else %>
+
+    <div class="empty-state">
+
+      <div class="empty-state-icon">
+        
+      </div>
+
+      <h2>No categories yet</h2>
+
+      <p>
+        Add your first category to organize your books.
+      </p>
+
+      <%= link_to "Add Category",
+                  new_category_path,
+                  class: "btn btn-primary" %>
+
+    </div>
+
+  <% end %>
+
+</div>

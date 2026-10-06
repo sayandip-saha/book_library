@@ -1,0 +1,56 @@
+<article class="book-card">
+
+  <div class="book-icon">
+  </div>
+
+  <h2>
+    <%= link_to book.title, book_path(book) %>
+  </h2>
+
+  <div class="book-details">
+
+    <div class="book-detail">
+      <strong>Author</strong>
+      <span><%= book.author.name %></span>
+    </div>
+
+    <div class="book-detail">
+      <strong>Category</strong>
+      <span><%= book.category.name %></span>
+    </div>
+
+    <div class="book-detail">
+      <strong>Published</strong>
+      <span><%= book.publication_year %></span>
+    </div>
+
+    <div class="book-detail">
+      <strong>Status</strong>
+
+      <% if book.available %>
+        <span class="badge badge-success">
+          Available
+        </span>
+      <% else %>
+        <span class="badge badge-danger">
+          Borrowed
+        </span>
+      <% end %>
+
+    </div>
+
+  </div>
+
+  <div class="book-actions">
+
+    <%= link_to "View",
+                book_path(book),
+                class: "btn btn-primary" %>
+
+    <%= link_to "Edit",
+                edit_book_path(book),
+                class: "btn btn-secondary" %>
+
+  </div>
+
+</article>

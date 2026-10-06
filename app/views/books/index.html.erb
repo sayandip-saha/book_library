@@ -1,0 +1,131 @@
+<div class="container">
+
+  <header class="page-header">
+  <span class="eyebrow">Personal Library</span>
+
+  <h1>My Book Library</h1>
+
+  <p>
+    Discover, organize and manage your favorite books
+    in one beautiful place.
+  </p>
+
+  <div class="quick-actions">
+    <%= link_to "+ Add Book", new_book_path, class: "btn btn-primary" %>
+
+    <%= link_to "+ Add Author",
+                new_author_path,
+                class: "btn btn-secondary" %>
+
+    <%= link_to "+ Add Category",
+                new_category_path,
+                class: "btn btn-secondary" %>
+  </div>
+</header>
+
+    <div class="stats-grid">
+
+  <div class="stat-card">
+    <div class="stat-icon"></div>
+    <div>
+      <span class="stat-label">BOOKS</span>
+      <strong><%= @book_count %></strong>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon"></div>
+    <div>
+      <span class="stat-label">AUTHORS</span>
+      <strong><%= @author_count %></strong>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon"></div>
+    <div>
+      <span class="stat-label">CATEGORIES</span>
+      <strong><%= @category_count %></strong>
+    </div>
+  </div>
+
+</div>
+
+    <div class="search-panel">
+
+  <%= form_with url: books_path, method: :get, local: true do |form| %>
+
+    <div class="search-row">
+
+      <div class="search-input">
+        <%= form.label :query, "Search Books" %>
+
+        <%= form.text_field :query,
+              value: params[:query],
+              placeholder: "Search by book title..." %>
+      </div>
+
+      <div class="search-input">
+        <%= form.label :author_id, "Author" %>
+
+        <%= form.collection_select :author_id,
+              @authors,
+              :id,
+              :name,
+              { prompt: "All Authors" },
+              { value: params[:author_id] } %>
+      </div>
+
+      <div class="search-input">
+        <%= form.label :category_id, "Category" %>
+
+        <%= form.collection_select :category_id,
+              @categories,
+              :id,
+              :name,
+              { prompt: "All Categories" },
+              { value: params[:category_id] } %>
+      </div>
+
+    </div>
+
+    <div class="search-actions">
+
+      <%= form.submit "Search",
+            class: "btn btn-primary" %>
+
+      <%= link_to "Clear Filters",
+            books_path,
+            class: "btn btn-secondary" %>
+
+    </div>
+
+  <% end %>
+
+</div>
+
+  <% if @books.any? %>
+
+    <div class="books-grid">
+      <%= render @books %>
+    </div>
+
+  <% else %>
+
+    <div class="empty-state">
+      <div class="empty-state-icon"></div>
+
+      <h2>Your library is empty</h2>
+
+      <p>
+        Start building your collection by adding your first book.
+      </p>
+
+      <%= link_to "Add Your First Book",
+                  new_book_path,
+                  class: "btn btn-primary" %>
+    </div>
+
+  <% end %>
+
+</div>

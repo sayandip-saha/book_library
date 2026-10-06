@@ -1,0 +1,63 @@
+<div class="container">
+
+  <div class="form-container">
+
+    <div class="form-header">
+
+      <span class="eyebrow">Library Management</span>
+
+      <h1>Add Author</h1>
+
+      <p>
+        Add an author to your library.
+      </p>
+
+    </div>
+
+    <%= form_with model: @author do |form| %>
+
+      <% if @author.errors.any? %>
+
+        <div class="alert alert-danger">
+
+          <h3>
+            <%= pluralize(@author.errors.count, "error") %>
+            prevented this author from being saved:
+          </h3>
+
+          <ul>
+            <% @author.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+
+        </div>
+
+      <% end %>
+
+      <div class="form-group">
+
+        <%= form.label :name, "Author Name" %>
+
+        <%= form.text_field :name,
+            placeholder: "e.g. Stephen King",
+            autofocus: true %>
+
+      </div>
+
+      <div class="form-actions">
+
+        <%= form.submit "Create Author",
+                        class: "btn btn-primary" %>
+
+        <%= link_to "Cancel",
+                    books_path,
+                    class: "btn btn-secondary" %>
+
+      </div>
+
+    <% end %>
+
+  </div>
+
+</div>

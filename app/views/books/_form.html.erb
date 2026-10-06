@@ -1,0 +1,93 @@
+<%= form_with model: @book do |form| %>
+
+  <% if @book.errors.any? %>
+    <div class="alert alert-danger">
+      <h3>
+        <%= pluralize(@book.errors.count, "error") %> prevented this book from being saved:
+      </h3>
+
+      <ul>
+        <% @book.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="form-group">
+    <%= form.label :title, "Book Title" %>
+    <%= form.text_field :title, placeholder: "Enter book title" %>
+  </div>
+
+  <div class="form-row">
+
+    <div class="form-group">
+      <%= form.label :author_id, "Author" %>
+
+      <%= form.collection_select(
+        :author_id,
+        Author.all,
+        :id,
+        :name,
+        { prompt: "Select an author" }
+      ) %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :category_id, "Category" %>
+
+      <%= form.collection_select(
+        :category_id,
+        Category.all,
+        :id,
+        :name,
+        { prompt: "Select a category" }
+      ) %>
+    </div>
+
+  </div>
+
+  <div class="form-row">
+
+    <div class="form-group">
+      <%= form.label :isbn, "ISBN" %>
+      <%= form.text_field :isbn, placeholder: "Enter ISBN" %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :publication_year, "Publication Year" %>
+      <%= form.number_field :publication_year, placeholder: "e.g. 2024" %>
+    </div>
+
+  </div>
+
+  <div class="form-group">
+    <%= form.label :description, "Description" %>
+
+    <%= form.text_area :description,
+        rows: 6,
+        placeholder: "Write a short description about the book..." %>
+  </div>
+
+  <div class="form-group checkbox-group">
+
+    <%= form.check_box :available %>
+
+    <%= form.label :available, "Book is currently available" %>
+
+  </div>
+
+  <div class="form-actions">
+
+    <%= form.submit(
+      @book.new_record? ? "Create Book" : "Update Book",
+      class: "btn btn-primary"
+    ) %>
+
+    <%= link_to "Cancel",
+                books_path,
+                class: "btn btn-secondary" %>
+
+  </div>
+
+<% end %>

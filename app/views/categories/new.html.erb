@@ -1,0 +1,63 @@
+<div class="container">
+
+  <div class="form-container">
+
+    <div class="form-header">
+
+      <span class="eyebrow">Library Management</span>
+
+      <h1>Add Category</h1>
+
+      <p>
+        Add a category to organize your library.
+      </p>
+
+    </div>
+
+    <%= form_with model: @category do |form| %>
+
+      <% if @category.errors.any? %>
+
+        <div class="alert alert-danger">
+
+          <h3>
+            <%= pluralize(@category.errors.count, "error") %>
+            prevented this category from being saved:
+          </h3>
+
+          <ul>
+            <% @category.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+
+        </div>
+
+      <% end %>
+
+      <div class="form-group">
+
+        <%= form.label :name, "Category Name" %>
+
+        <%= form.text_field :name,
+            placeholder: "e.g. Fantasy",
+            autofocus: true %>
+
+      </div>
+
+      <div class="form-actions">
+
+        <%= form.submit "Create Category",
+                        class: "btn btn-primary" %>
+
+        <%= link_to "Cancel",
+                    books_path,
+                    class: "btn btn-secondary" %>
+
+      </div>
+
+    <% end %>
+
+  </div>
+
+</div>
