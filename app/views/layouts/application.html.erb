@@ -1,47 +1,79 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>BookLibrary</title>
+    <title>BookLibrary — Modern Personal Catalog</title>
 
     <meta name="viewport" content="width=device-width,initial-scale=1">
 
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
-    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 
   <body>
 
     <nav class="navbar">
+      <div class="nav-container">
+        <%= link_to root_path, class: "brand" do %>
+          <div class="brand-icon">📚</div>
+          <span>BookLibrary</span>
+        <% end %>
 
-      <div class="nav-links">
-  <% if authenticated? %>
-    <%= link_to "Books", books_path, class: "nav-link" %>
-    <%= link_to "Authors", authors_path, class: "nav-link" %>
-    <%= link_to "Categories", categories_path, class: "nav-link" %>
+        <div class="nav-links">
+          <%= link_to "Books", books_path, class: "nav-link #{'active' if current_page?(books_path) || current_page?(root_path)}" %>
+          <%= link_to "Authors", authors_path, class: "nav-link #{'active' if current_page?(authors_path)}" %>
+          <%= link_to "Categories", categories_path, class: "nav-link #{'active' if current_page?(categories_path)}" %>
 
-    <%= link_to "+ Add Book",
-                new_book_path,
-                class: "nav-add-button" %>
+          <% if authenticated? %>
+            <%= link_to "+ Add Book",
+                        new_book_path,
+                        class: "nav-add-button" %>
 
-    <%= button_to "Log Out",
-                  session_path,
-                  method: :delete,
-                  class: "nav-link" %>
-  <% else %>
-    <%= link_to "Log In",
-                new_session_path,
-                class: "nav-link" %>
+            <div class="user-pill" title="Signed in as <%= Current.user&.email_address %>">
+              <span class="user-pill-avatar"><%= Current.user&.email_address&.first&.upcase || "U" %></span>
+              <span class="user-pill-email"><%= Current.user&.email_address %></span>
+            </div>
 
-    <%= link_to "Create Account",
-                new_user_path,
-                class: "nav-add-button" %>
-  <% end %>
-</div>
+            <%= button_to "Log Out",
+                          session_path,
+                          method: :delete,
+                          class: "nav-link" %>
+          <% else %>
+            <%= link_to "Log In",
+                        new_session_path,
+                        class: "nav-link #{'active' if current_page?(new_session_path)}" %>
 
+            <%= link_to "Create Account",
+                        new_user_path,
+                        class: "nav-add-button" %>
+          <% end %>
+        </div>
+      </div>
     </nav>
+
+    <% if flash[:notice].present? %>
+      <div class="flash-container">
+        <div class="alert alert-success">
+          <span class="alert-icon">✓</span>
+          <span><%= flash[:notice] %></span>
+        </div>
+      </div>
+    <% end %>
+
+    <% if flash[:alert].present? %>
+      <div class="flash-container">
+        <div class="alert alert-danger">
+          <span class="alert-icon">⚠️</span>
+          <span><%= flash[:alert] %></span>
+        </div>
+      </div>
+    <% end %>
 
     <main>
       <%= yield %>

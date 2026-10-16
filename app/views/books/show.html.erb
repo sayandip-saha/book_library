@@ -1,91 +1,104 @@
 <div class="container">
 
-  <div class="book-show">
+  <div class="book-show-wrapper">
 
-    <%= link_to "← Back to Books", books_path, class: "back-link" %>
+    <%= link_to books_path, class: "back-nav-link" do %>
+      <span class="back-arrow">←</span>
+      <span>Back to Library Collection</span>
+    <% end %>
 
-    <div class="book-show-header">
+    <div class="book-show-layout">
 
-      <div class="book-show-icon">
-      </div>
+      <aside class="book-show-aside">
+        <div class="book-cover-display">
+          <div class="book-cover-spine"></div>
+          <div class="book-cover-badge">
+            <% if @book.available %>
+              <span class="status-pill status-available">
+                <span class="status-dot"></span> Available
+              </span>
+            <% else %>
+              <span class="status-pill status-borrowed">
+                <span class="status-dot"></span> Borrowed
+              </span>
+            <% end %>
+          </div>
+          <div class="book-cover-center">
+            <span class="book-cover-emblem">📖</span>
+            <span class="book-cover-meta-year"><%= @book.publication_year %></span>
+          </div>
+          <div class="book-cover-footer-isbn">
+            <span class="isbn-barcode">||| | ||| || |</span>
+            <span class="isbn-text"><%= @book.isbn %></span>
+          </div>
+        </div>
 
-      <div>
-        <span class="book-show-label">BOOK DETAILS</span>
+        <div class="book-show-quick-actions">
+          <%= link_to "✏️ Edit Book",
+                      edit_book_path(@book),
+                      class: "btn btn-primary btn-block" %>
 
-        <h1>
-          <%= @book.title %>
-        </h1>
+          <%= button_to "🗑️ Delete Book",
+                        @book,
+                        method: :delete,
+                        class: "btn btn-danger btn-block",
+                        data: {
+                          turbo_confirm: "Are you sure you want to permanently delete \"#{@book.title}\"?"
+                        } %>
+        </div>
+      </aside>
 
-        <p class="book-show-subtitle">
-          A detailed view of your library book
-        </p>
-      </div>
+      <section class="book-show-main">
+        <div class="book-category-tag">
+          🏷️ <%= @book.category.name %>
+        </div>
 
-    </div>
+        <h1 class="book-show-title"><%= @book.title %></h1>
 
-    <div class="book-info-grid">
+        <div class="book-author-strip">
+          <span class="author-avatar author-avatar-lg"><%= @book.author.name.first %></span>
+          <div>
+            <span class="author-byline-label">AUTHOR</span>
+            <strong class="author-byline-name"><%= @book.author.name %></strong>
+          </div>
+        </div>
 
-      <div class="info-box">
-        <span>AUTHOR</span>
-        <strong><%= @book.author.name %></strong>
-      </div>
+        <div class="book-specs-grid">
+          <div class="spec-card">
+            <span class="spec-label">ISBN</span>
+            <strong class="spec-value spec-code"><%= @book.isbn %></strong>
+          </div>
 
-      <div class="info-box">
-        <span>CATEGORY</span>
-        <strong><%= @book.category.name %></strong>
-      </div>
+          <div class="spec-card">
+            <span class="spec-label">PUBLICATION YEAR</span>
+            <strong class="spec-value"><%= @book.publication_year %></strong>
+          </div>
 
-      <div class="info-box">
-        <span>ISBN</span>
-        <strong><%= @book.isbn %></strong>
-      </div>
+          <div class="spec-card">
+            <span class="spec-label">CIRCULATION STATUS</span>
+            <% if @book.available %>
+              <strong class="spec-value text-emerald">● In Library</strong>
+            <% else %>
+              <strong class="spec-value text-rose">● On Loan</strong>
+            <% end %>
+          </div>
 
-      <div class="info-box">
-        <span>PUBLICATION YEAR</span>
-        <strong><%= @book.publication_year %></strong>
-      </div>
+          <div class="spec-card">
+            <span class="spec-label">CATEGORY</span>
+            <strong class="spec-value"><%= @book.category.name %></strong>
+          </div>
+        </div>
 
-      <div class="info-box">
-        <span>AVAILABILITY</span>
-
-        <% if @book.available %>
-          <strong class="status available">
-            ● Available
-          </strong>
-        <% else %>
-          <strong class="status borrowed">
-            ● Borrowed
-          </strong>
-        <% end %>
-
-      </div>
-
-    </div>
-
-    <div class="description-box">
-
-      <span>DESCRIPTION</span>
-
-      <p>
-        <%= @book.description.presence ||
-            "No description has been added for this book yet." %>
-      </p>
-
-    </div>
-
-    <div class="book-show-actions">
-
-      <%= link_to "Edit Book",
-                  edit_book_path(@book),
-                  class: "btn btn-primary" %>
-
-      <%= button_to "Delete Book",
-                    @book,
-                    method: :delete,
-                    class: "btn btn-danger",
-                    data: {
-                      turbo_confirm: "Are you sure you want to delete this book?"
-                    } %>
+        <div class="book-synopsis-panel">
+          <div class="synopsis-header">
+            <span class="synopsis-icon">📜</span>
+            <h3>Book Synopsis & Notes</h3>
+          </div>
+          <div class="synopsis-body">
+            <%= simple_format(@book.description.presence || "No summary or description has been provided for this book yet. Click 'Edit Book' to write notes or details.") %>
+          </div>
+        </div>
+      </section>
 
     </div>
 

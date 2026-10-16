@@ -1,5 +1,4 @@
 Rails.application.routes.draw do
-  get "users/new"
   resource :session
   resources :passwords, param: :token
   resources :books

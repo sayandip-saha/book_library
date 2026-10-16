@@ -1,54 +1,60 @@
 <div class="container">
 
-  <div class="page-header">
-    <span class="eyebrow">Library Management</span>
+  <header class="page-header">
+    <div class="hero-badge">
+      <span class="eyebrow-dot"></span>
+      <span>Taxonomy & Creators</span>
+    </div>
 
-    <h1>Authors</h1>
+    <h1>Authors Directory</h1>
 
-    <p>
-      Manage the authors in your personal library.
+    <p class="hero-description">
+      Browse all authors featured in your personal library and quickly discover all their cataloged volumes.
     </p>
 
-    <%= link_to "+ Add Author",
-                new_author_path,
-                class: "btn btn-primary" %>
-  </div>
+    <div class="quick-actions">
+      <%= link_to "+ Add Author",
+                  new_author_path,
+                  class: "btn btn-primary btn-glow" %>
+      <%= link_to "← Back to Library",
+                  books_path,
+                  class: "btn btn-secondary" %>
+    </div>
+  </header>
 
   <% if @authors.any? %>
 
-    <div class="books-grid">
+    <div class="taxonomy-grid">
 
       <% @authors.each do |author| %>
 
-        <article class="book-card">
+        <article class="taxonomy-card">
 
-          <div class="book-icon">
-            
+          <div class="taxonomy-header">
+            <div class="author-avatar author-avatar-xl">
+              <%= author.name.first %>
+            </div>
+            <div class="taxonomy-badge">
+              <span><%= pluralize(author.books.count, "book") %></span>
+            </div>
           </div>
 
-          <h2>
+          <h2 class="taxonomy-name">
             <%= author.name %>
           </h2>
 
-          <div class="book-details">
-
-            <div class="book-detail">
-              <strong>Books</strong>
-              <span><%= author.books.count %></span>
-            </div>
-
-          </div>
-
-          <div class="book-actions">
+          <div class="taxonomy-actions">
+            <%= link_to "View Books",
+                        books_path(author_id: author.id),
+                        class: "btn btn-secondary btn-sm" %>
 
             <%= button_to "Delete",
                           author_path(author),
                           method: :delete,
-                          class: "btn btn-danger",
+                          class: "btn btn-danger btn-sm",
                           data: {
-                            turbo_confirm: "Delete #{author.name}?"
+                            turbo_confirm: "Delete #{author.name}? (Only possible if no books are associated)"
                           } %>
-
           </div>
 
         </article>
@@ -60,19 +66,14 @@
   <% else %>
 
     <div class="empty-state">
-
-      <div class="empty-state-icon"></div>
-
-      <h2>No authors yet</h2>
-
+      <div class="empty-state-icon">✒️</div>
+      <h2>No Authors Added Yet</h2>
       <p>
-        Add your first author to start building your library.
+        Start populating your authors list so you can organize your book collection by writer.
       </p>
-
-      <%= link_to "Add Author",
+      <%= link_to "+ Add First Author",
                   new_author_path,
                   class: "btn btn-primary" %>
-
     </div>
 
   <% end %>

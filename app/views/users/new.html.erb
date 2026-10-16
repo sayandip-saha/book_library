@@ -1,9 +1,10 @@
 <div class="container">
   <div class="form-container">
     <div class="form-header">
+      <div class="brand-icon" style="margin: 0 auto 16px auto;">✨</div>
       <span class="eyebrow">BookLibrary</span>
       <h1>Create Account</h1>
-      <p>Join BookLibrary and organize your collection.</p>
+      <p>Join BookLibrary and organize your personal collection.</p>
     </div>
 
     <%= form_with model: @user do |form| %>
@@ -28,6 +29,7 @@
       <div class="form-group">
         <%= form.label :password, "Password" %>
         <%= form.password_field :password,
+              placeholder: "Choose a secure password",
               required: true,
               autocomplete: "new-password" %>
       </div>
@@ -35,6 +37,7 @@
       <div class="form-group">
         <%= form.label :password_confirmation, "Confirm Password" %>
         <%= form.password_field :password_confirmation,
+              placeholder: "Repeat your password",
               required: true,
               autocomplete: "new-password" %>
       </div>

@@ -1,131 +1,128 @@
 <div class="container">
 
-  <header class="page-header">
-  <span class="eyebrow">Personal Library</span>
+  <header class="page-header hero-header">
+    <div class="hero-badge">
+      <span class="eyebrow-dot"></span>
+      <span>Personal Library Catalog</span>
+    </div>
 
-  <h1>My Book Library</h1>
+    <h1>Curate, Explore & Read</h1>
 
-  <p>
-    Discover, organize and manage your favorite books
-    in one beautiful place.
-  </p>
+    <p class="hero-description">
+      Your elegant personal haven to catalog literature, track loan availability, and organize your favorite volumes with precision.
+    </p>
 
-  <div class="quick-actions">
-    <%= link_to "+ Add Book", new_book_path, class: "btn btn-primary" %>
+    <div class="quick-actions">
+      <%= link_to "+ Add Book", new_book_path, class: "btn btn-primary btn-glow" %>
+      <%= link_to "✍️ Add Author", new_author_path, class: "btn btn-secondary" %>
+      <%= link_to "🏷️ Add Category", new_category_path, class: "btn btn-secondary" %>
+    </div>
+  </header>
 
-    <%= link_to "+ Add Author",
-                new_author_path,
-                class: "btn btn-secondary" %>
+  <div class="stats-grid">
+    <div class="stat-card stat-card-books">
+      <div class="stat-icon-wrap stat-icon-purple">
+        <span class="stat-icon-inner">📚</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-label">TOTAL BOOKS</span>
+        <strong class="stat-number"><%= @book_count %></strong>
+      </div>
+    </div>
 
-    <%= link_to "+ Add Category",
-                new_category_path,
-                class: "btn btn-secondary" %>
-  </div>
-</header>
+    <div class="stat-card stat-card-authors">
+      <div class="stat-icon-wrap stat-icon-cyan">
+        <span class="stat-icon-inner">✍️</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-label">FEATURED AUTHORS</span>
+        <strong class="stat-number"><%= @author_count %></strong>
+      </div>
+    </div>
 
-    <div class="stats-grid">
-
-  <div class="stat-card">
-    <div class="stat-icon"></div>
-    <div>
-      <span class="stat-label">BOOKS</span>
-      <strong><%= @book_count %></strong>
+    <div class="stat-card stat-card-categories">
+      <div class="stat-icon-wrap stat-icon-amber">
+        <span class="stat-icon-inner">🏷️</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-label">GENRES & CATEGORIES</span>
+        <strong class="stat-number"><%= @category_count %></strong>
+      </div>
     </div>
   </div>
 
-  <div class="stat-card">
-    <div class="stat-icon"></div>
-    <div>
-      <span class="stat-label">AUTHORS</span>
-      <strong><%= @author_count %></strong>
+  <div class="search-panel">
+    <div class="search-panel-header">
+      <div class="search-title">
+        <span class="search-title-icon">🔍</span>
+        <span>Filter Collection</span>
+      </div>
+      <div class="search-results-counter">
+        <%= pluralize(@books.count, "book") %> shown
+      </div>
     </div>
-  </div>
 
-  <div class="stat-card">
-    <div class="stat-icon"></div>
-    <div>
-      <span class="stat-label">CATEGORIES</span>
-      <strong><%= @category_count %></strong>
-    </div>
-  </div>
+    <%= form_with url: books_path, method: :get, local: true do |form| %>
+      <div class="search-row">
+        <div class="search-input-field">
+          <%= form.label :query, "Search Title" %>
+          <div class="input-with-icon">
+            <span class="field-icon">🔎</span>
+            <%= form.text_field :query,
+                  value: params[:query],
+                  placeholder: "Search by title keywords..." %>
+          </div>
+        </div>
 
-</div>
+        <div class="search-input-field">
+          <%= form.label :author_id, "Author" %>
+          <%= form.collection_select :author_id,
+                @authors,
+                :id,
+                :name,
+                { prompt: "All Authors" },
+                { value: params[:author_id] } %>
+        </div>
 
-    <div class="search-panel">
-
-  <%= form_with url: books_path, method: :get, local: true do |form| %>
-
-    <div class="search-row">
-
-      <div class="search-input">
-        <%= form.label :query, "Search Books" %>
-
-        <%= form.text_field :query,
-              value: params[:query],
-              placeholder: "Search by book title..." %>
+        <div class="search-input-field">
+          <%= form.label :category_id, "Category" %>
+          <%= form.collection_select :category_id,
+                @categories,
+                :id,
+                :name,
+                { prompt: "All Categories" },
+                { value: params[:category_id] } %>
+        </div>
       </div>
 
-      <div class="search-input">
-        <%= form.label :author_id, "Author" %>
+      <div class="search-actions">
+        <%= form.submit "Apply Filters", class: "btn btn-primary" %>
 
-        <%= form.collection_select :author_id,
-              @authors,
-              :id,
-              :name,
-              { prompt: "All Authors" },
-              { value: params[:author_id] } %>
+        <% if params[:query].present? || params[:author_id].present? || params[:category_id].present? %>
+          <%= link_to "Clear Filters", books_path, class: "btn btn-secondary active-clear" %>
+        <% else %>
+          <%= link_to "Reset", books_path, class: "btn btn-secondary" %>
+        <% end %>
       </div>
-
-      <div class="search-input">
-        <%= form.label :category_id, "Category" %>
-
-        <%= form.collection_select :category_id,
-              @categories,
-              :id,
-              :name,
-              { prompt: "All Categories" },
-              { value: params[:category_id] } %>
-      </div>
-
-    </div>
-
-    <div class="search-actions">
-
-      <%= form.submit "Search",
-            class: "btn btn-primary" %>
-
-      <%= link_to "Clear Filters",
-            books_path,
-            class: "btn btn-secondary" %>
-
-    </div>
-
-  <% end %>
-
-</div>
+    <% end %>
+  </div>
 
   <% if @books.any? %>
-
     <div class="books-grid">
       <%= render @books %>
     </div>
-
   <% else %>
-
     <div class="empty-state">
-      <div class="empty-state-icon"></div>
-
-      <h2>Your library is empty</h2>
-
+      <div class="empty-state-icon">📖</div>
+      <h2>No Books Match Your Criteria</h2>
       <p>
-        Start building your collection by adding your first book.
+        Try loosening your search filters or add a new book to expand your collection.
       </p>
-
-      <%= link_to "Add Your First Book",
-                  new_book_path,
-                  class: "btn btn-primary" %>
+      <div class="empty-state-actions">
+        <%= link_to "Clear All Filters", books_path, class: "btn btn-secondary" %>
+        <%= link_to "+ Add a Book", new_book_path, class: "btn btn-primary" %>
+      </div>
     </div>
-
   <% end %>
 
 </div>

@@ -1,59 +1,60 @@
 <div class="container">
 
-  <div class="page-header">
+  <header class="page-header">
+    <div class="hero-badge">
+      <span class="eyebrow-dot"></span>
+      <span>Taxonomy & Genres</span>
+    </div>
 
-    <span class="eyebrow">Library Management</span>
+    <h1>Categories & Genres</h1>
 
-    <h1>Categories</h1>
-
-    <p>
-      Organize your books by category.
+    <p class="hero-description">
+      Organize your collection by genre and thematic category to quickly browse related literature.
     </p>
 
-    <%= link_to "+ Add Category",
-                new_category_path,
-                class: "btn btn-primary" %>
-
-  </div>
+    <div class="quick-actions">
+      <%= link_to "+ Add Category",
+                  new_category_path,
+                  class: "btn btn-primary btn-glow" %>
+      <%= link_to "← Back to Library",
+                  books_path,
+                  class: "btn btn-secondary" %>
+    </div>
+  </header>
 
   <% if @categories.any? %>
 
-    <div class="books-grid">
+    <div class="taxonomy-grid">
 
       <% @categories.each do |category| %>
 
-        <article class="book-card">
+        <article class="taxonomy-card">
 
-          <div class="book-icon">
-            
+          <div class="taxonomy-header">
+            <div class="category-icon-box">
+              🏷️
+            </div>
+            <div class="taxonomy-badge">
+              <span><%= pluralize(category.books.count, "book") %></span>
+            </div>
           </div>
 
-          <h2>
+          <h2 class="taxonomy-name">
             <%= category.name %>
           </h2>
 
-          <div class="book-details">
-
-            <div class="book-detail">
-              <strong>Books</strong>
-
-              <span>
-                <%= category.books.count %>
-              </span>
-            </div>
-
-          </div>
-
-          <div class="book-actions">
+          <div class="taxonomy-actions">
+            <%= link_to "View Books",
+                        books_path(category_id: category.id),
+                        class: "btn btn-secondary btn-sm" %>
 
             <%= button_to "Delete",
                           category_path(category),
                           method: :delete,
-                          class: "btn btn-danger",
+                          class: "btn btn-danger btn-sm",
                           data: {
-                            turbo_confirm: "Delete #{category.name}?"
+                            turbo_confirm: "Delete #{category.name}? (Only possible if no books are associated)"
                           } %>
-
           </div>
 
         </article>
@@ -65,21 +66,14 @@
   <% else %>
 
     <div class="empty-state">
-
-      <div class="empty-state-icon">
-        
-      </div>
-
-      <h2>No categories yet</h2>
-
+      <div class="empty-state-icon">📂</div>
+      <h2>No Categories Yet</h2>
       <p>
-        Add your first category to organize your books.
+        Create genres and categories to classify your books (e.g. Science Fiction, Philosophy, History).
       </p>
-
-      <%= link_to "Add Category",
+      <%= link_to "+ Add First Category",
                   new_category_path,
                   class: "btn btn-primary" %>
-
     </div>
 
   <% end %>
