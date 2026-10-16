@@ -1,15 +1,17 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
 one:
-  title: MyString
-  isbn: MyString
-  publication_year: 1
-  description: MyText
-  available: false
+  title: The Hobbit
+  isbn: "978-0547928227"
+  publication_year: 1937
+  description: A fantasy novel about Bilbo Baggins.
+  available: true
+  author: one
+  category: one
 
 two:
-  title: MyString
-  isbn: MyString
-  publication_year: 1
-  description: MyText
+  title: The Fellowship of the Ring
+  isbn: "978-0547928210"
+  publication_year: 1954
+  description: The first volume in The Lord of the Rings.
   available: false
+  author: two
+  category: two

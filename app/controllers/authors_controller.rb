@@ -1,6 +1,8 @@
 class AuthorsController < ApplicationController
+  allow_unauthenticated_access only: %i[ index ]
+
   def index
-    @authors = Author.all.order(:name)
+    @authors = Author.includes(:books).order(:name)
   end
 
   def new
@@ -11,22 +13,22 @@ class AuthorsController < ApplicationController
     @author = Author.new(author_params)
 
     if @author.save
-      redirect_to authors_path
+      redirect_to authors_path, notice: "Author was successfully created."
     else
       render :new, status: :unprocessable_entity
     end
   end
 
   def destroy
-  @author = Author.find(params[:id])
+    @author = Author.find(params[:id])
 
-  if @author.destroy
-    redirect_to authors_path, notice: "Author deleted successfully."
-  else
-    redirect_to authors_path,
-                alert: @author.errors.full_messages.to_sentence
+    if @author.destroy
+      redirect_to authors_path, notice: "Author deleted successfully."
+    else
+      redirect_to authors_path,
+                  alert: @author.errors.full_messages.to_sentence
+    end
   end
-end
 
   private
 
