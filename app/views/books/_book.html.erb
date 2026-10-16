@@ -17,11 +17,25 @@
   </div>
 
   <div class="book-cover-mockup">
-    <div class="book-spine"></div>
-    <div class="book-cover-content">
-      <span class="book-cover-icon">📖</span>
-      <span class="book-cover-year"><%= book.publication_year %></span>
-    </div>
+    <% if book.cover_url.present? %>
+      <img src="<%= book.cover_url %>"
+           alt="<%= book.title %>"
+           class="book-card-cover-img"
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+      <div class="book-card-cover-fallback" style="display: none;">
+        <div class="book-spine"></div>
+        <div class="book-cover-content">
+          <span class="book-cover-icon">📖</span>
+          <span class="book-cover-year"><%= book.publication_year %></span>
+        </div>
+      </div>
+    <% else %>
+      <div class="book-spine"></div>
+      <div class="book-cover-content">
+        <span class="book-cover-icon">📖</span>
+        <span class="book-cover-year"><%= book.publication_year %></span>
+      </div>
+    <% end %>
   </div>
 
   <div class="book-card-body">

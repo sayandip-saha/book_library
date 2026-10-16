@@ -1,5 +1,5 @@
 class BooksController < ApplicationController
-  allow_unauthenticated_access only: %i[ index show ]
+  allow_unauthenticated_access only: %i[ index show lookup ]
 
   def index
     @books = Book.includes(:author, :category)
@@ -32,7 +32,33 @@ class BooksController < ApplicationController
   end
 
   def new
-    @book = Book.new
+    @book = Book.new(available: true)
+  end
+
+  def lookup
+    isbn = params[:isbn].to_s.strip
+    create_book = params[:create_book] == "true"
+    result = OpenLibraryService.fetch_by_isbn(isbn, create_associations: true, create_book: create_book)
+    render json: result
+  end
+
+  def import
+    isbn = params[:isbn].to_s.strip
+    result = OpenLibraryService.fetch_by_isbn(isbn, create_associations: true, create_book: true)
+
+    if result[:success] && result[:book_id].present?
+      redirect_to book_path(result[:book_id]), notice: "✨ \"#{result[:title]}\" by #{result[:author_name]} was successfully imported and saved to the library!"
+    else
+      error_msg = result[:error] || "Could not fetch book details from Open Library."
+      redirect_to new_book_path, alert: error_msg
+    end
+  end
+
+  def toggle_availability
+    @book = Book.find(params[:id])
+    @book.update(available: !@book.available)
+    status_label = @book.available? ? "Available in Library" : "Marked as Borrowed"
+    redirect_to @book, notice: "\"#{@book.title}\" is now #{status_label}."
   end
 
   def create
@@ -77,7 +103,8 @@ class BooksController < ApplicationController
         :description,
         :available,
         :author_id,
-        :category_id
+        :category_id,
+        :cover_image_url
       ]
     )
   end

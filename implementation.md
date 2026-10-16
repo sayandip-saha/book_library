@@ -2,13 +2,13 @@
 
 ## 1. Technical Stack & Dependencies
 
-The application is engineered on **Ruby on Rails 8**, leveraging modern defaults for zero-dependency frontend pipelines, SQLite-backed services, and production container acceleration.
+The application is engineered on **Ruby on Rails 8**, leveraging modern defaults for zero-dependency frontend pipelines, MySQL database storage, and production container acceleration.
 
 | Component | Technology | Version / Specification |
 | :--- | :--- | :--- |
 | **Language** | Ruby | `3.4.10` (defined in `.ruby-version`) |
 | **Web Framework** | Ruby on Rails | `~> 8.1.3` (Rails 8.1) |
-| **Database** | SQLite3 | `>= 2.1` with WAL mode support |
+| **Database** | MySQL | `>= 8.0` via `trilogy` adapter with UTF8MB4 |
 | **Authentication** | Rails 8 Built-in Auth | `has_secure_password` via `bcrypt (~> 3.1.7)` |
 | **Session Tracking** | Active Record & Signed Cookies | Database-backed sessions via `Current.session` |
 | **Rate Limiter** | Rails 8 Controller Rate Limiting | IP-based request throttling on auth endpoints |
@@ -72,33 +72,34 @@ The application is engineered on **Ruby on Rails 8**, leveraging modern defaults
 ### 2.2 Table Definitions (`db/schema.rb`)
 
 #### Table: `users`
-- `id` (INTEGER, Primary Key, Auto-increment)
-- `email_address` (STRING, NOT NULL, UNIQUE index)
-- `password_digest` (STRING, NOT NULL)
-- `created_at`, `updated_at` (DATETIME, NOT NULL)
+- `id` (BIGINT, Primary Key, Auto-increment)
+- `email_address` (STRING/VARCHAR(255), NOT NULL, UNIQUE index)
+- `password_digest` (STRING/VARCHAR(255), NOT NULL)
+- `created_at`, `updated_at` (DATETIME(6), NOT NULL)
 
 #### Table: `sessions`
-- `id` (INTEGER, Primary Key, Auto-increment)
-- `user_id` (INTEGER, NOT NULL, Foreign Key referencing `users.id`)
+- `id` (BIGINT, Primary Key, Auto-increment)
+- `user_id` (BIGINT, NOT NULL, Foreign Key referencing `users.id`)
 - `ip_address` (STRING)
 - `user_agent` (STRING)
-- `created_at`, `updated_at` (DATETIME, NOT NULL)
+- `created_at`, `updated_at` (DATETIME(6), NOT NULL)
 
 #### Table: `books`
-- `id` (INTEGER, Primary Key, Auto-increment)
-- `title` (STRING)
-- `isbn` (STRING, UNIQUE)
-- `publication_year` (INTEGER)
+- `id` (BIGINT, Primary Key, Auto-increment)
+- `title` (STRING/VARCHAR(255))
+- `isbn` (STRING/VARCHAR(255), UNIQUE)
+- `publication_year` (INTEGER/INT)
 - `description` (TEXT)
-- `available` (BOOLEAN)
-- `author_id` (INTEGER, Foreign Key referencing `authors.id`)
-- `category_id` (INTEGER, Foreign Key referencing `categories.id`)
-- `created_at`, `updated_at` (DATETIME, NOT NULL)
+- `available` (BOOLEAN/TINYINT(1))
+- `cover_image_url` (STRING/VARCHAR(255))
+- `author_id` (BIGINT, Foreign Key referencing `authors.id`)
+- `category_id` (BIGINT, Foreign Key referencing `categories.id`)
+- `created_at`, `updated_at` (DATETIME(6), NOT NULL)
 
 #### Table: `authors` & `categories`
-- `id` (INTEGER, Primary Key, Auto-increment)
-- `name` (STRING)
-- `created_at`, `updated_at` (DATETIME, NOT NULL)
+- `id` (BIGINT, Primary Key, Auto-increment)
+- `name` (STRING/VARCHAR(255))
+- `created_at`, `updated_at` (DATETIME(6), NOT NULL)
 
 ### 2.3 Migration History
 1. `20261006054941_create_books.rb` — Base books table.
@@ -107,6 +108,7 @@ The application is engineered on **Ruby on Rails 8**, leveraging modern defaults
 4. `20261006055251_add_author_and_category_to_books.rb` — Foreign keys and indices for authors/categories on books.
 5. `20261012042108_create_users.rb` — Users table with unique email index.
 6. `20261012042109_create_sessions.rb` — Sessions table linked to users.
+7. `20261016102000_add_cover_image_url_to_books.rb` — Add `cover_image_url` string column to `books`.
 
 ---
 
@@ -153,10 +155,48 @@ class Book < ApplicationRecord
   validates :title, presence: true
   validates :isbn, presence: true, uniqueness: true
   validates :publication_year, presence: true
+
+  def cover_url
+    cover_image_url.presence || default_open_library_cover
+  end
+
+  def default_open_library_cover
+    return nil if isbn.blank?
+    clean_isbn = isbn.gsub(/[^0-9X]/i, "")
+    "https://covers.openlibrary.org/b/isbn/#{clean_isbn}-M.jpg?default=false"
+  end
 end
 ```
+- **Cover Resolution:** `cover_url` prioritizes explicit `cover_image_url` fetched from Open Library API and gracefully falls back to direct Open Library ISBN cover endpoints.
 
-### 3.4 `Author` & `Category` (`app/models/author.rb`, `app/models/category.rb`)
+### 3.4 `OpenLibraryService` (`app/services/open_library_service.rb`)
+```ruby
+class OpenLibraryService
+  BASE_URL = "https://openlibrary.org/api/books"
+
+  CANONICAL_GENRES = {
+    "Dystopian" => ["dystop", "totalitarian", "authoritarian", "1984", "orwellian"],
+    "Fantasy" => ["magic", "wizard", "witches", "dragon", "mythology", "sorcery", "hogwarts", "fantasy"],
+    "Science Fiction" => ["space opera", "time travel", "cyberpunk", "extraterrestrial", "science fiction", "scifi"],
+    "Mystery & Thriller" => ["thriller", "suspense", "mystery", "detective", "crime", "espionage"],
+    "Classics" => ["classic literature", "fiction classics", "classics"],
+    "Historical Fiction" => ["historical fiction", "regency", "victorian", "world war", "civil war", "gothic"],
+    "Romance" => ["romance", "courtship", "love stories"],
+    "Computer Science & Tech" => ["computer", "software", "programming", "coding", "agile", "web development"],
+    # ... additional canonical genres (Philosophy, History, Biography, Politics, etc.)
+  }.freeze
+
+  def self.fetch_by_isbn(isbn, create_associations: true, create_book: false)
+    # Fetches from Open Library API, extracts author and canonical category,
+    # finds or creates Author and Category in database, and optionally creates Book
+  end
+end
+```
+- **Real Author & Category Extraction:** Intelligently matches book subjects against canonical literary genres with specificity weighting, and resolves Open Library `/authors/OL...` keys when required.
+- **Database Persistence During Auto-Fetch:** During ISBN auto-fetch, automatically creates or finds `Author` and `Category` records in the database, returning valid foreign keys (`author_id`, `category_id`) to the form.
+- **Optional Direct Book Import:** Supports `create_book: true` to persist the book directly to the database in a single step.
+
+### 3.5 `Author` & `Category` (`app/models/author.rb`, `app/models/category.rb`)
 ```ruby
 class Author < ApplicationRecord
   has_many :books, dependent: :restrict_with_error
@@ -179,7 +219,15 @@ end
 Rails.application.routes.draw do
   resource :session
   resources :passwords, param: :token
-  resources :books
+  resources :books do
+    collection do
+      get :lookup
+      post :import
+    end
+    member do
+      patch :toggle_availability
+    end
+  end
   resources :authors, only: [:index, :new, :create, :destroy]
   resources :categories, only: [:index, :new, :create, :destroy]
   resources :users, only: %i[new create]
@@ -196,8 +244,12 @@ end
 
 ### 4.3 Controller Permissions & Optimization
 - **`BooksController`:**
-  - Publicly accessible: `allow_unauthenticated_access only: %i[ index show ]`.
-  - Mutating actions (`new`, `create`, `edit`, `update`, `destroy`) require authentication.
+  - Publicly accessible: `allow_unauthenticated_access only: %i[ index show lookup ]`.
+  - Mutating actions (`new`, `create`, `edit`, `update`, `destroy`, `import`, `toggle_availability`) require authentication.
+  - **Open Library Lookup:** `lookup` endpoint accepts `params[:isbn]`, queries Open Library, automatically persists the Author and Category into the database, and returns JSON metadata.
+  - **Direct Book Import:** `import` endpoint (`POST /books/import`) fetches and saves the Author, Category, and Book directly to the database and redirects to the book's show page.
+  - **Instant Availability Flip:** `toggle_availability` toggles `book.available` status in one click and redirects back with confirmation notice.
+  - **Permitted Parameters:** Permits `:title`, `:isbn`, `:publication_year`, `:description`, `:available`, `:cover_image_url`, `:author_id`, `:category_id`.
   - **N+1 Optimization:** Uses `@books = Book.includes(:author, :category)`.
   - **Sanitized Search:** Uses `ActiveRecord::Base.sanitize_sql_like(params[:query])` to prevent SQL wildcard attacks.
 - **`AuthorsController` & `CategoriesController`:**

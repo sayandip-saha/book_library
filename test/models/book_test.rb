@@ -36,4 +36,14 @@ class BookTest < ActiveSupport::TestCase
     assert_not duplicate.valid?
     assert_includes duplicate.errors[:isbn], "has already been taken"
   end
+
+  test "cover_url returns cover_image_url when present" do
+    book = Book.new(cover_image_url: "https://covers.openlibrary.org/b/id/12345-L.jpg")
+    assert_equal "https://covers.openlibrary.org/b/id/12345-L.jpg", book.cover_url
+  end
+
+  test "cover_url falls back to default open library cover when isbn is present" do
+    book = Book.new(isbn: "9780451524935")
+    assert_equal "https://covers.openlibrary.org/b/isbn/9780451524935-L.jpg", book.cover_url
+  end
 end

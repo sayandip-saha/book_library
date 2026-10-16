@@ -1,4 +1,4 @@
-<%= form_with model: @book do |form| %>
+<%= form_with model: @book, id: "book_form" do |form| %>
 
   <% if @book.errors.any? %>
     <div class="alert alert-danger">
@@ -15,10 +15,71 @@
     </div>
   <% end %>
 
+  <!-- Open Library ISBN Auto-Fill Bar -->
+  <div class="isbn-lookup-card">
+    <div class="isbn-lookup-header">
+      <div class="isbn-lookup-title">
+        <span class="lookup-badge">⚡ Auto-Fill Integration</span>
+        <h3>Fetch from Open Library</h3>
+      </div>
+      <span class="lookup-subtitle">Enter an ISBN-10 or ISBN-13 to instantly fetch the title, author, category, publication year, synopsis, and cover image.</span>
+    </div>
+
+    <div class="isbn-lookup-row">
+      <div class="lookup-input-wrapper">
+        <span class="lookup-icon">🔎</span>
+        <input type="text"
+               id="openlibrary_isbn_input"
+               placeholder="Enter ISBN (e.g. 9780140328721 or 9780439708180)"
+               class="lookup-field"
+               value="<%= @book.isbn %>"
+               autocomplete="off">
+      </div>
+      <div class="lookup-actions">
+        <button type="button" id="btn_fetch_isbn" class="btn btn-primary lookup-btn" title="Fetch details, store author and category in database, and auto-fill form">
+          <span class="btn-text">🔍 Fetch Details & Cover</span>
+          <span class="btn-spinner" style="display: none;">⏳ Fetching...</span>
+        </button>
+        <button type="button" id="btn_import_isbn" class="lookup-import-btn" title="Immediately fetch and save book, author, and category directly to database">
+          <span class="btn-import-text">🚀 1-Click Save to Library</span>
+          <span class="btn-import-spinner" style="display: none;">⏳ Saving to DB...</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="isbn_lookup_status" class="lookup-status" style="display: none;"></div>
+
+    <!-- Live Book Cover Preview Card -->
+    <div id="book_cover_preview_box" class="book-cover-preview-card" style="<%= @book.cover_image_url.present? ? '' : 'display: none;' %>">
+      <div class="preview-cover-col">
+        <img id="preview_cover_img"
+             src="<%= @book.cover_image_url %>"
+             alt="Book Cover Preview"
+             class="preview-cover-thumb"
+             onerror="this.style.display='none'; document.getElementById('preview_cover_placeholder').style.display='flex';">
+        <div id="preview_cover_placeholder" class="preview-cover-fallback" style="display: none;">📖 No Image</div>
+      </div>
+      <div class="preview-info-col">
+        <span class="preview-badge">✓ Open Library Metadata</span>
+        <h4 id="preview_title"><%= @book.title.presence || "Book Title" %></h4>
+        <p id="preview_author" class="preview-author-text">
+          <%= @book.author&.name ? "By #{@book.author.name}" : "By Author Name" %>
+        </p>
+        <div class="preview-tags">
+          <span id="preview_year" class="preview-tag">📅 <%= @book.publication_year.presence || "Year" %></span>
+          <span id="preview_genre" class="preview-tag">🏷️ <%= @book.category&.name.presence || "Genre" %></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%= form.hidden_field :cover_image_url, id: "book_cover_image_url" %>
+
   <div class="form-group">
     <%= form.label :title, "Book Title *" %>
     <%= form.text_field :title,
-          placeholder: "e.g. The Name of the Wind",
+          id: "book_title",
+          placeholder: "e.g. Fantastic Mr. Fox",
           required: true,
           autofocus: true %>
   </div>
@@ -32,7 +93,7 @@
         :id,
         :name,
         { prompt: "Select or choose an author" },
-        { required: true }
+        { id: "book_author_id", required: true }
       ) %>
     </div>
 
@@ -44,7 +105,7 @@
         :id,
         :name,
         { prompt: "Select a genre or category" },
-        { required: true }
+        { id: "book_category_id", required: true }
       ) %>
     </div>
   </div>
@@ -53,14 +114,16 @@
     <div class="form-group">
       <%= form.label :isbn, "ISBN Number *" %>
       <%= form.text_field :isbn,
-            placeholder: "e.g. 978-0756404741",
+            id: "book_isbn",
+            placeholder: "e.g. 9780140328721",
             required: true %>
     </div>
 
     <div class="form-group">
       <%= form.label :publication_year, "Publication Year *" %>
       <%= form.number_field :publication_year,
-            placeholder: "e.g. 2007",
+            id: "book_publication_year",
+            placeholder: "e.g. 1988",
             min: 1000,
             max: Time.current.year + 5,
             required: true %>
@@ -70,19 +133,31 @@
   <div class="form-group">
     <%= form.label :description, "Synopsis & Catalog Notes" %>
     <%= form.text_area :description,
+        id: "book_description",
         rows: 5,
         placeholder: "Write a summary, thematic synopsis, or personal reflections on this book..." %>
   </div>
 
-  <div class="form-group toggle-card">
-    <label class="toggle-container">
-      <%= form.check_box :available, class: "toggle-checkbox" %>
-      <span class="toggle-slider"></span>
-      <span class="toggle-label-text">
-        <strong>Book is currently Available in Library</strong>
-        <small>Toggle off if this volume is on loan or borrowed</small>
-      </span>
-    </label>
+  <!-- Book Availability Toggle Switch -->
+  <div class="form-group toggle-card" id="toggle_availability_card">
+    <div class="toggle-container">
+      <%= form.check_box :available,
+            class: "toggle-checkbox",
+            id: "book_available",
+            checked: (@book.available.nil? ? true : @book.available) %>
+      <label for="book_available" class="toggle-slider-label">
+        <span class="toggle-slider"></span>
+      </label>
+      <label for="book_available" class="toggle-label-text">
+        <div class="toggle-title-row">
+          <strong>Book is currently Available in Library</strong>
+          <span id="availability_status_badge" class="badge <%= (@book.available.nil? || @book.available) ? 'badge-success' : 'badge-danger' %>">
+            <%= (@book.available.nil? || @book.available) ? '● Available' : '● Borrowed' %>
+          </span>
+        </div>
+        <small>Toggle off if this volume is on loan or checked out by a reader</small>
+      </label>
+    </div>
   </div>
 
   <div class="form-actions">
@@ -97,3 +172,188 @@
   </div>
 
 <% end %>
+
+<script>
+  (function() {
+    function setupBookForm() {
+      // 1. Availability Toggle Interactivity
+      const checkbox = document.getElementById("book_available");
+      const badge = document.getElementById("availability_status_badge");
+      const toggleCard = document.getElementById("toggle_availability_card");
+
+      function updateAvailabilityUI() {
+        if (!checkbox || !badge) return;
+        if (checkbox.checked) {
+          badge.textContent = "● Available";
+          badge.className = "badge badge-success";
+          toggleCard.classList.add("is-available");
+          toggleCard.classList.remove("is-borrowed");
+        } else {
+          badge.textContent = "● Borrowed";
+          badge.className = "badge badge-danger";
+          toggleCard.classList.add("is-borrowed");
+          toggleCard.classList.remove("is-available");
+        }
+      }
+
+      if (checkbox) {
+        checkbox.addEventListener("change", updateAvailabilityUI);
+        updateAvailabilityUI();
+      }
+
+      if (toggleCard) {
+        toggleCard.addEventListener("click", function(e) {
+          // If clicked outside checkbox and label elements, toggle the checkbox
+          if (e.target.tagName !== "INPUT" && e.target.tagName !== "LABEL" && !e.target.closest("label")) {
+            checkbox.checked = !checkbox.checked;
+            checkbox.dispatchEvent(new Event("change"));
+          }
+        });
+      }
+
+      // 2. Open Library ISBN Lookup Interactivity
+      const isbnInput = document.getElementById("openlibrary_isbn_input");
+      const btnFetch = document.getElementById("btn_fetch_isbn");
+      const btnImport = document.getElementById("btn_import_isbn");
+      const statusBox = document.getElementById("isbn_lookup_status");
+      const previewBox = document.getElementById("book_cover_preview_box");
+      const previewImg = document.getElementById("preview_cover_img");
+      const previewPlaceholder = document.getElementById("preview_cover_placeholder");
+      const previewTitle = document.getElementById("preview_title");
+      const previewAuthor = document.getElementById("preview_author");
+      const previewYear = document.getElementById("preview_year");
+      const previewGenre = document.getElementById("preview_genre");
+
+      const fieldTitle = document.getElementById("book_title");
+      const fieldIsbn = document.getElementById("book_isbn");
+      const fieldYear = document.getElementById("book_publication_year");
+      const fieldDesc = document.getElementById("book_description");
+      const fieldCover = document.getElementById("book_cover_image_url");
+      const selectAuthor = document.getElementById("book_author_id");
+      const selectCategory = document.getElementById("book_category_id");
+
+      if (!btnFetch || !isbnInput) return;
+
+      async function performLookup(autoSave = false) {
+        const rawIsbn = isbnInput.value.trim();
+        if (!rawIsbn) {
+          showStatus("Please enter an ISBN number to fetch.", "error");
+          isbnInput.focus();
+          return;
+        }
+
+        const activeBtn = autoSave ? btnImport : btnFetch;
+        const btnText = activeBtn ? activeBtn.querySelector(autoSave ? ".btn-import-text" : ".btn-text") : null;
+        const btnSpinner = activeBtn ? activeBtn.querySelector(autoSave ? ".btn-import-spinner" : ".btn-spinner") : null;
+
+        if (btnFetch) btnFetch.disabled = true;
+        if (btnImport) btnImport.disabled = true;
+        if (btnText) btnText.style.display = "none";
+        if (btnSpinner) btnSpinner.style.display = "inline";
+
+        showStatus(autoSave ? "Fetching from Open Library & saving to database..." : "Fetching details & storing author/category in database...", "info");
+
+        try {
+          const endpoint = `/books/lookup?isbn=${encodeURIComponent(rawIsbn)}&create_associations=true&create_book=${autoSave ? 'true' : 'false'}`;
+          const response = await fetch(endpoint, {
+            headers: { "Accept": "application/json" }
+          });
+          const data = await response.json();
+
+          if (data.success) {
+            // Populate form inputs
+            if (data.title && fieldTitle) fieldTitle.value = data.title;
+            if (data.isbn && fieldIsbn) fieldIsbn.value = data.isbn;
+            if (data.publication_year && fieldYear) fieldYear.value = data.publication_year;
+            if (data.description && fieldDesc) fieldDesc.value = data.description;
+            if (data.cover_image_url && fieldCover) fieldCover.value = data.cover_image_url;
+
+            // Select or add Author with real database ID
+            if (data.author_id && selectAuthor) {
+              let opt = Array.from(selectAuthor.options).find(o => o.value == data.author_id);
+              if (!opt) {
+                opt = new Option(data.author_name, data.author_id, true, true);
+                selectAuthor.add(opt);
+              }
+              selectAuthor.value = data.author_id;
+            }
+
+            // Select or add Category with real database ID
+            if (data.category_id && selectCategory) {
+              let opt = Array.from(selectCategory.options).find(o => o.value == data.category_id);
+              if (!opt) {
+                opt = new Option(data.category_name, data.category_id, true, true);
+                selectCategory.add(opt);
+              }
+              selectCategory.value = data.category_id;
+            }
+
+            // Update Live Preview Card
+            if (previewBox) {
+              previewBox.style.display = "flex";
+              if (data.cover_image_url && previewImg) {
+                previewImg.style.display = "block";
+                previewImg.src = data.cover_image_url;
+                if (previewPlaceholder) previewPlaceholder.style.display = "none";
+              } else if (previewPlaceholder) {
+                if (previewImg) previewImg.style.display = "none";
+                previewPlaceholder.style.display = "flex";
+              }
+              if (previewTitle) previewTitle.textContent = data.title || "Untitled Book";
+              if (previewAuthor) previewAuthor.textContent = data.author_name ? `By ${data.author_name}` : "Unknown Author";
+              if (previewYear) previewYear.textContent = `📅 ${data.publication_year || "Unknown Year"}`;
+              if (previewGenre) previewGenre.textContent = `🏷️ ${data.category_name || "General"}`;
+            }
+
+            if (autoSave && data.book_id) {
+              showStatus(`✓ Saved "${data.title}" by ${data.author_name} to library database! Redirecting...`, "success");
+              setTimeout(() => {
+                window.location.href = `/books/${data.book_id}`;
+              }, 600);
+              return;
+            }
+
+            showStatus(`✓ Found "${data.title}"! Stored Author ("${data.author_name}") and Category ("${data.category_name}") in database.`, "success");
+          } else {
+            showStatus(data.error || "Book not found on Open Library. You can still enter details manually.", "error");
+          }
+        } catch (err) {
+          showStatus("Network error connecting to Open Library: " + err.message, "error");
+        } finally {
+          if (!autoSave) {
+            if (btnFetch) btnFetch.disabled = false;
+            if (btnImport) btnImport.disabled = false;
+            if (btnText) btnText.style.display = "inline";
+            if (btnSpinner) btnSpinner.style.display = "none";
+          }
+        }
+      }
+
+      function showStatus(msg, type) {
+        if (!statusBox) return;
+        statusBox.style.display = "block";
+        statusBox.className = `lookup-status status-${type}`;
+        statusBox.textContent = msg;
+      }
+
+      btnFetch.addEventListener("click", () => performLookup(false));
+      if (btnImport) {
+        btnImport.addEventListener("click", () => performLookup(true));
+      }
+
+      isbnInput.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          performLookup(false);
+        }
+      });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", setupBookForm);
+    } else {
+      setupBookForm();
+    }
+    document.addEventListener("turbo:load", setupBookForm);
+  })();
+</script>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_12_042109) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_16_102000) do
   create_table "authors", force: :cascade do |t|
     t.string "name"
     t.datetime "created_at", null: false
@@ -23,10 +23,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_042109) do
     t.integer "publication_year"
     t.text "description"
     t.boolean "available"
+    t.string "cover_image_url"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "author_id"
-    t.integer "category_id"
+    t.bigint "author_id"
+    t.bigint "category_id"
     t.index ["author_id"], name: "index_books_on_author_id"
     t.index ["category_id"], name: "index_books_on_category_id"
   end
@@ -38,7 +39,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_042109) do
   end
 
   create_table "sessions", force: :cascade do |t|
-    t.integer "user_id", null: false
+    t.bigint "user_id", null: false
     t.string "ip_address"
     t.string "user_agent"
     t.datetime "created_at", null: false

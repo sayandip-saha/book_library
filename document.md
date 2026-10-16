@@ -2,7 +2,7 @@
 
 ## 1. Introduction & Overview
 
-**Book Library** is an application built with Ruby on Rails 8 designed to catalog, organize, and monitor physical and digital book collections. It combines a relational SQLite database with a modern dark glassmorphism interface.
+**Book Library** is an application built with Ruby on Rails 8 designed to catalog, organize, and monitor physical and digital book collections. It combines a relational MySQL database with a modern dark glassmorphism interface.
 
 ### Key Capabilities
 - **Book Cataloging:** Complete metadata tracking (Title, Author, Category, ISBN, Publication Year, Synopsis, Availability).
@@ -58,19 +58,26 @@ Under the header stats, use the **Filter Collection Command Bar**:
 
 ### 2.5 Adding a Book (Requires Authentication)
 1. Click **+ Add Book** in the navigation header or hero section.
-2. Fill out the book details:
+2. **Auto-Fill & Database Persistence with Open Library:**
+   - In the **⚡ Quick Auto-Fill with Open Library** box at the top of the form, type or paste any 10-digit or 13-digit ISBN (e.g., `9780141439518`, `9780451524935`, `0451524934`, `9780132350884`).
+   - You have two convenient options:
+     - **Option A — 🔍 Fetch Details & Cover**: Queries the Open Library API, extracts the real author name and canonical genre/category (e.g., *Dystopian*, *Classics*, *Fantasy*, *Computer Science & Tech*), **automatically stores the author and category records into the database**, populates the form with valid database IDs, and renders a live cover preview. You can review/edit details before clicking **✨ Create Book Entry**.
+     - **Option B — 🚀 1-Click Save to Library**: In a single click, queries Open Library, stores the Author and Category in the database, saves the entire Book record directly to the database, and redirects straight to the new book showcase page!
+3. **Manual Entry & Adjustments:**
    - **Book Title** *(Required)*: The full title of the publication.
-   - **Author** *(Required)*: Select an existing author from the dropdown. *(Tip: Add missing authors via the Authors directory).*
-   - **Category** *(Required)*: Select a genre or category. *(Tip: Add missing genres via the Categories directory).*
+   - **Author** *(Required)*: Automatically linked to the stored author or choose from the dropdown.
+   - **Category** *(Required)*: Automatically linked to the stored category or choose from the dropdown.
    - **ISBN** *(Required & Unique)*: The 10 or 13-digit International Standard Book Number.
    - **Publication Year** *(Required)*: Four-digit year of release (e.g., `2024`).
+   - **Cover Image URL**: Direct link to the high-resolution book cover image (pre-filled by Open Library).
    - **Synopsis & Catalog Notes**: Summary, impressions, or jacket copy.
-   - **Circulation Availability Toggle**: Slide toggle on if the book is currently on the shelf; toggle off if borrowed or lent out.
-3. Click **✨ Create Book Entry**. An inline error banner highlights any missing or duplicate fields.
+   - **Circulation Availability Toggle**: Responsive slider button. Toggling dynamically reflects `● Available` (emerald) or `● Borrowed` (coral).
+4. Click **✨ Create Book Entry**. An inline error banner highlights any missing or duplicate fields.
 
 ### 2.6 Inspecting & Editing Books
-- **Inspect:** Click on any book card or **View Details →** to open the 2-column showcase view (`/books/:id`), displaying the 3D cover card, circulation status, ISBN barcode chip, author strip, specifications grid, and reading synopsis.
-- **Edit:** Click **Edit** from the book card or show page to modify metadata or toggle availability.
+- **Inspect:** Click on any book card or **View Details →** to open the 2-column showcase view (`/books/:id`), displaying the high-resolution cover art (or stylized 3D spine mockup fallback), circulation status badge, ISBN barcode chip, author strip, specifications grid, and reading synopsis.
+- **1-Click Availability Toggle:** When signed in, click the **🔄 Mark as Borrowed / Available** button directly on the book showcase page to instantly flip the status without editing the entire form.
+- **Edit:** Click **Edit** from the book card or show page to modify metadata, fetch updated cover art, or toggle availability.
 - **Delete:** From the book show page, click **🗑️ Delete Book** and confirm the prompt.
 
 ### 2.7 Managing Authors
@@ -94,8 +101,9 @@ Under the header stats, use the **Filter Collection Command Bar**:
 ### 3.1 System Requirements
 - **Ruby:** `3.4.10` (or compatible Ruby 3.3+)
 - **Rails:** `8.1.3` or later
-- **SQLite3:** Version 3.40+ with WAL mode support
+- **Database:** MySQL 8.0+ / MariaDB (connected via Rails `trilogy` adapter)
 - **Bundler:** Version 2.5+
+- **Docker** *(Optional, for running MySQL)*
 
 ### 3.2 Local Setup
 Clone the repository and set up dependencies:
@@ -105,10 +113,15 @@ Clone the repository and set up dependencies:
 git clone https://github.com/sayandip-saha/book_library.git
 cd book_library
 
-# 2. Automated Rails setup (installs gems, creates & migrates database)
+# 2. Start MySQL database (if using Docker)
+docker run -d --name book_library_mysql -p 3306:3306 -e MYSQL_ALLOW_EMPTY_PASSWORD=yes -e MYSQL_DATABASE=book_library_development mysql:8.0
+# Or via docker compose:
+# docker compose up -d
+
+# 3. Automated Rails setup (installs gems, creates & migrates MySQL database)
 bin/setup
 
-# 3. Start development server
+# 4. Start development server
 bin/rails server
 # Or using the dev script:
 bin/dev

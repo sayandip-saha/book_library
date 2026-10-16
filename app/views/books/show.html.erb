@@ -11,7 +11,27 @@
 
       <aside class="book-show-aside">
         <div class="book-cover-display">
-          <div class="book-cover-spine"></div>
+          <% if @book.cover_url.present? %>
+            <div class="book-cover-image-wrapper">
+              <img src="<%= @book.cover_url %>"
+                   alt="<%= @book.title %> Cover"
+                   class="book-cover-real-img"
+                   onerror="this.parentElement.style.display='none'; document.getElementById('book_cover_fallback').style.display='flex';">
+            </div>
+          <% end %>
+
+          <div id="book_cover_fallback" class="book-cover-fallback-content" style="<%= @book.cover_url.present? ? 'display: none;' : '' %>">
+            <div class="book-cover-spine"></div>
+            <div class="book-cover-center">
+              <span class="book-cover-emblem">📖</span>
+              <span class="book-cover-meta-year"><%= @book.publication_year %></span>
+            </div>
+            <div class="book-cover-footer-isbn">
+              <span class="isbn-barcode">||| | ||| || |</span>
+              <span class="isbn-text"><%= @book.isbn %></span>
+            </div>
+          </div>
+
           <div class="book-cover-badge">
             <% if @book.available %>
               <span class="status-pill status-available">
@@ -23,20 +43,18 @@
               </span>
             <% end %>
           </div>
-          <div class="book-cover-center">
-            <span class="book-cover-emblem">📖</span>
-            <span class="book-cover-meta-year"><%= @book.publication_year %></span>
-          </div>
-          <div class="book-cover-footer-isbn">
-            <span class="isbn-barcode">||| | ||| || |</span>
-            <span class="isbn-text"><%= @book.isbn %></span>
-          </div>
         </div>
 
         <div class="book-show-quick-actions">
-          <%= link_to "✏️ Edit Book",
+          <!-- 1-Click Availability Toggle Button -->
+          <%= button_to (@book.available ? "📦 Mark as Borrowed" : "✅ Mark as Available"),
+                        toggle_availability_book_path(@book),
+                        method: :patch,
+                        class: (@book.available ? "btn btn-secondary btn-block" : "btn btn-primary btn-glow btn-block") %>
+
+          <%= link_to "✏️ Edit Book Details",
                       edit_book_path(@book),
-                      class: "btn btn-primary btn-block" %>
+                      class: "btn btn-secondary btn-block" %>
 
           <%= button_to "🗑️ Delete Book",
                         @book,
@@ -65,7 +83,7 @@
 
         <div class="book-specs-grid">
           <div class="spec-card">
-            <span class="spec-label">ISBN</span>
+            <span class="spec-label">ISBN NUMBER</span>
             <strong class="spec-value spec-code"><%= @book.isbn %></strong>
           </div>
 
@@ -77,14 +95,14 @@
           <div class="spec-card">
             <span class="spec-label">CIRCULATION STATUS</span>
             <% if @book.available %>
-              <strong class="spec-value text-emerald">● In Library</strong>
+              <strong class="spec-value text-emerald">● In Library (Available)</strong>
             <% else %>
-              <strong class="spec-value text-rose">● On Loan</strong>
+              <strong class="spec-value text-rose">● On Loan (Borrowed)</strong>
             <% end %>
           </div>
 
           <div class="spec-card">
-            <span class="spec-label">CATEGORY</span>
+            <span class="spec-label">CATEGORY / GENRE</span>
             <strong class="spec-value"><%= @book.category.name %></strong>
           </div>
         </div>
@@ -95,7 +113,7 @@
             <h3>Book Synopsis & Notes</h3>
           </div>
           <div class="synopsis-body">
-            <%= simple_format(@book.description.presence || "No summary or description has been provided for this book yet. Click 'Edit Book' to write notes or details.") %>
+            <%= simple_format(@book.description.presence || "No summary or description has been provided for this book yet. Click 'Edit Book Details' or use Open Library auto-fill to populate synopsis notes.") %>
           </div>
         </div>
       </section>

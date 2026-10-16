@@ -665,7 +665,7 @@ main {
 /* 3D Mini Book Cover Mockup */
 .book-cover-mockup {
   position: relative;
-  height: 96px;
+  height: 120px;
   border-radius: 12px;
   margin-bottom: 18px;
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(6, 182, 212, 0.18));
@@ -673,8 +673,28 @@ main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px 0 28px;
+  padding: 0;
   overflow: hidden;
+}
+
+.book-card-cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.book-card:hover .book-card-cover-img {
+  transform: scale(1.04);
+}
+
+.book-card-cover-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px 0 28px;
 }
 
 .book-spine {
@@ -877,7 +897,7 @@ main {
 
 .book-cover-display {
   position: relative;
-  height: 380px;
+  height: 420px;
   border-radius: var(--radius-md);
   background: linear-gradient(145deg, rgba(139, 92, 246, 0.3), rgba(6, 182, 212, 0.22));
   border: 1px solid rgba(167, 139, 250, 0.35);
@@ -885,8 +905,43 @@ main {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 24px;
+  padding: 0;
   overflow: hidden;
+}
+
+.book-cover-image-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.book-cover-real-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.book-cover-fallback-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px;
+  z-index: 1;
+}
+
+.book-cover-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
 }
 
 .book-cover-spine {
@@ -1195,36 +1250,312 @@ main {
   gap: 18px;
 }
 
-/* Custom Toggle Card */
+/* =========================================================
+   OPEN LIBRARY AUTO-FILL & PREVIEW
+========================================================= */
+
+.isbn-lookup-card {
+  margin-bottom: 28px;
+  padding: 22px 24px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(6, 182, 212, 0.08));
+  border: 1px solid rgba(139, 92, 246, 0.28);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+
+.isbn-lookup-header {
+  margin-bottom: 16px;
+}
+
+.isbn-lookup-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.lookup-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primary-light);
+  background: rgba(139, 92, 246, 0.18);
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.isbn-lookup-title h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.lookup-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+  display: block;
+}
+
+.isbn-lookup-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.lookup-input-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.lookup-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.95rem;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.lookup-field {
+  width: 100%;
+  padding: 12px 16px 12px 42px !important;
+  border-radius: 12px;
+  background: rgba(8, 12, 22, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: #fff;
+  font-size: 0.95rem;
+  font-family: monospace;
+  transition: all 0.2s ease;
+}
+
+.lookup-field:focus {
+  outline: none;
+  border-color: var(--primary-light) !important;
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2) !important;
+}
+
+.lookup-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.lookup-btn {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 10px 18px;
+}
+
+.lookup-import-btn {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 10px 18px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.22), rgba(6, 182, 212, 0.22));
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #a7f3d0;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lookup-import-btn:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.38), rgba(6, 182, 212, 0.38));
+  border-color: #10b981;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.3);
+}
+
+.lookup-status {
+  margin-top: 14px;
+  padding: 11px 16px;
+  border-radius: 10px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lookup-status.status-info {
+  background: rgba(6, 182, 212, 0.12);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  color: #67e8f9;
+}
+
+.lookup-status.status-success {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
+}
+
+.lookup-status.status-error {
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  color: #fda4af;
+}
+
+/* Live Book Cover Preview Card */
+.book-cover-preview-card {
+  margin-top: 16px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: rgba(10, 14, 28, 0.9);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  animation: previewFadeIn 0.3s ease;
+}
+
+@keyframes previewFadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.preview-cover-col {
+  width: 76px;
+  height: 108px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.preview-cover-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-cover-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  text-align: center;
+  padding: 6px;
+}
+
+.preview-info-col {
+  flex: 1;
+}
+
+.preview-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #34d399;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.preview-info-col h4 {
+  margin: 0 0 4px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.preview-author-text {
+  margin: 0 0 10px;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+.preview-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.preview-tag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+/* =========================================================
+   CUSTOM TOGGLE CARD (FIXED INTERACTIVITY)
+========================================================= */
+
 .toggle-card {
-  padding: 16px 20px;
+  padding: 18px 22px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  user-select: none;
+}
+
+.toggle-card:hover {
+  background: rgba(255, 255, 255, 0.055);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.toggle-card.is-available {
+  border-color: rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.06);
+}
+
+.toggle-card.is-borrowed {
+  border-color: rgba(244, 63, 94, 0.3);
+  background: rgba(244, 63, 94, 0.05);
 }
 
 .toggle-container {
   display: flex;
   align-items: center;
-  gap: 14px;
-  cursor: pointer;
+  gap: 16px;
   margin: 0 !important;
+  cursor: pointer;
 }
 
 .toggle-checkbox {
   position: absolute;
   opacity: 0;
-  pointer-events: none;
+  width: 0;
+  height: 0;
+  pointer-events: auto;
+}
+
+.toggle-slider-label {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  margin: 0;
 }
 
 .toggle-slider {
-  width: 44px;
-  height: 24px;
+  width: 48px;
+  height: 26px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.18);
   position: relative;
   flex-shrink: 0;
-  transition: background 0.25s ease;
+  cursor: pointer;
+  transition: background 0.25s ease, box-shadow 0.25s ease;
 }
 
 .toggle-slider::before {
@@ -1232,29 +1563,41 @@ main {
   position: absolute;
   top: 3px;
   left: 3px;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.toggle-checkbox:checked + .toggle-slider {
+.toggle-checkbox:checked + .toggle-slider-label .toggle-slider {
   background: var(--emerald);
-  box-shadow: 0 0 12px var(--emerald-glow);
+  box-shadow: 0 0 14px var(--emerald-glow);
 }
 
-.toggle-checkbox:checked + .toggle-slider::before {
-  transform: translateX(20px);
+.toggle-checkbox:checked + .toggle-slider-label .toggle-slider::before {
+  transform: translateX(22px);
 }
 
 .toggle-label-text {
+  flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 3px;
+  cursor: pointer;
+  margin: 0;
 }
 
-.toggle-label-text strong {
-  font-size: 0.92rem;
+.toggle-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.toggle-title-row strong {
+  font-size: 0.95rem;
   color: #fff;
 }
 
