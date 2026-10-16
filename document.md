@@ -2,69 +2,90 @@
 
 ## 1. Introduction & Overview
 
-**Book Library** is an application built with Ruby on Rails 8 designed to catalog, organize, and monitor book collections. It pairs a database with an ultra-responsive dark glassmorphism interface.
+**Book Library** is an application built with Ruby on Rails 8 designed to catalog, organize, and monitor physical and digital book collections. It combines a relational SQLite database with a modern dark glassmorphism interface.
 
 ### Key Capabilities
 - **Book Cataloging:** Complete metadata tracking (Title, Author, Category, ISBN, Publication Year, Synopsis, Availability).
-- **Taxonomy Management:** Dedicated Author and Category indexes with active relationship tracking.
-- **Search & Filtering:** Real-time multi-dimensional search filtering books simultaneously by title query, author, and category.
-- **Safety Controls:** Referential deletion protection (`restrict_with_error`) ensuring authors or categories cannot be orphaned while books are assigned.
-- **Modern Dark UI:** Glassmorphism design system built with native CSS, custom properties, and responsive grid layouts.
+- **Authentication & Security:** Built-in Rails 8 authentication with secure password hashing (BCrypt), session cookie tracking, rate limiting, and email-based password recovery.
+- **Public Discovery & Protected Modification:** Visitors can freely browse and search the collection; creating, editing, and deleting records requires logging in.
+- **Taxonomy Management:** Dedicated Author and Category directories with one-click collection filtering.
+- **Search & Filtering:** Real-time multi-dimensional search filtering books simultaneously by sanitized title keywords, author, and category.
+- **Safety Controls:** Referential deletion protection (`restrict_with_error`) ensuring authors or categories cannot be deleted while books are assigned.
+- **Modern Dark UI:** Glassmorphism design system built with Google Fonts (`Plus Jakarta Sans`, `Outfit`), CSS custom properties, 3D book cover mockups, and responsive layouts.
 
 ---
 
 ## 2. End-User Guide
 
-### 2.1 Navigation & Dashboard
-The top navigation bar provides instant access to key sections:
-- **Logo / Brand:** Returns to the main library dashboard (`/books`).
+### 2.1 Navigation & User Profiles
+The sticky top navigation bar provides instant access across the application:
+- **Logo / Brand (`📚 BookLibrary`):** Returns to the main library catalog (`/books`).
 - **Books:** Opens the master catalog and search portal.
-- **Authors:** Opens the author management directory.
+- **Authors:** Opens the author directory.
 - **Categories:** Opens the category and genre directory.
-- **+ Add Book:** Quick shortcut to register a new book into the library.
+- **User Profile Pill (`user@example.com`):** When signed in, displays your account email and initial avatar.
+- **+ Add Book:** Shortcut to register a new book (requires sign-in).
+- **Log In / Create Account:** Accessible to visitors in the top right.
+- **Log Out:** Securely terminates the session and returns to the login screen.
 
-### 2.2 Metrics & Overview
+### 2.2 Account Creation & Password Recovery
+1. **Registration:**
+   - Click **Create Account** in the navbar or visit `/users/new`.
+   - Enter your email address and a secure password.
+   - Upon registration, your session is immediately authenticated and you are directed to the catalog.
+2. **Logging In:**
+   - Click **Log In** or visit `/session/new`.
+   - Enter your credentials. If you attempted to access a protected page (like adding a book), you will automatically be redirected there after logging in.
+3. **Password Reset:**
+   - Click **Forgot password?** on the login form or visit `/passwords/new`.
+   - Submit your registered email address.
+   - If the account exists, password reset instructions with a secure 15-minute token will be dispatched to your inbox.
+   - Click the link in the email to set a new password.
+
+### 2.3 Metrics & Overview
 At the top of the collection page, the stats grid displays live aggregate totals:
-- **BOOKS:** Total number of books cataloged.
-- **AUTHORS:** Total number of registered authors.
-- **CATEGORIES:** Total number of categories and genres.
+- **TOTAL BOOKS:** Count of all books cataloged in the library.
+- **FEATURED AUTHORS:** Count of distinct authors represented.
+- **GENRES & CATEGORIES:** Count of active thematic categories.
 
-### 2.3 Searching and Filtering Books
-Under the header stats, use the **Search Panel**:
-1. **Search Books:** Type any keyword or phrase into the text field to match book titles.
-2. **Author Dropdown:** Filter specifically by a chosen author or select "All Authors".
-3. **Category Dropdown:** Filter by category or select "All Categories".
-4. **Submit:** Click **Search** to execute the combined filter.
-5. **Reset:** Click **Clear Filters** to return to the full collection view.
+### 2.4 Searching and Filtering Books
+Under the header stats, use the **Filter Collection Command Bar**:
+1. **Search Title:** Type any keyword or title fragment. Search queries are automatically sanitized.
+2. **Author Dropdown:** Filter by a chosen author or select "All Authors".
+3. **Category Dropdown:** Filter by genre or select "All Categories".
+4. **Submit:** Click **Apply Filters** to update the list. The counter displays how many books match.
+5. **Reset:** Click **Clear Filters** to quickly reset all criteria.
 
-### 2.4 Adding a Book
+### 2.5 Adding a Book (Requires Authentication)
 1. Click **+ Add Book** in the navigation header or hero section.
 2. Fill out the book details:
-   - **Book Title** *(Required)*: The title of the publication.
-   - **Author** *(Required)*: Select an existing author from the dropdown. *(Tip: If the author does not exist, create them first via the Authors tab).*
-   - **Category** *(Required)*: Select an existing category. *(Tip: Add missing categories via the Categories tab).*
+   - **Book Title** *(Required)*: The full title of the publication.
+   - **Author** *(Required)*: Select an existing author from the dropdown. *(Tip: Add missing authors via the Authors directory).*
+   - **Category** *(Required)*: Select a genre or category. *(Tip: Add missing genres via the Categories directory).*
    - **ISBN** *(Required & Unique)*: The 10 or 13-digit International Standard Book Number.
    - **Publication Year** *(Required)*: Four-digit year of release (e.g., `2024`).
-   - **Description**: Summary, jacket copy, or notes about the book.
-   - **Available Checkbox**: Check if the book is currently on the shelf; uncheck if it is borrowed or checked out.
-3. Click **Create Book**. If validations fail, an error notification highlights missing or duplicate fields.
+   - **Synopsis & Catalog Notes**: Summary, impressions, or jacket copy.
+   - **Circulation Availability Toggle**: Slide toggle on if the book is currently on the shelf; toggle off if borrowed or lent out.
+3. Click **✨ Create Book Entry**. An inline error banner highlights any missing or duplicate fields.
 
-### 2.5 Inspecting & Editing Books
-- **Inspect:** Click on any book card or the **View** button to open the detailed view (`/books/:id`), displaying full metadata, publication year, ISBN, and description.
-- **Edit:** Click **Edit** from the book card or show page to modify metadata or toggle availability status.
-- **Delete:** From the book show page, click **Delete Book**. Confirm the prompt to remove the book permanently from the catalog.
+### 2.6 Inspecting & Editing Books
+- **Inspect:** Click on any book card or **View Details →** to open the 2-column showcase view (`/books/:id`), displaying the 3D cover card, circulation status, ISBN barcode chip, author strip, specifications grid, and reading synopsis.
+- **Edit:** Click **Edit** from the book card or show page to modify metadata or toggle availability.
+- **Delete:** From the book show page, click **🗑️ Delete Book** and confirm the prompt.
 
-### 2.6 Managing Authors
+### 2.7 Managing Authors
 - Navigate to **Authors** (`/authors`).
-- Review the total number of books assigned to each author.
-- Click **+ Add Author** to create a new author name.
-- **Delete Author Safeguard:** If an author has books associated with them, attempting to delete them will be blocked with an informative message (`Cannot delete record because dependent books exist`). To delete an author, you must first reassign or delete their associated books.
+- Review author cards showing initial avatars and the number of books in the collection.
+- Click **View Books** on any author card to instantly filter the library catalog to that author's works.
+- Click **+ Add Author** to register a new author.
+- **Delete Safeguard:** If an author has books associated with them, attempting to delete them is blocked with a protective alert (`Cannot delete record because dependent books exist`).
 
-### 2.7 Managing Categories
+### 2.8 Managing Categories
 - Navigate to **Categories** (`/categories`).
-- View the book count for each genre or category.
-- Click **+ Add Category** to register new categories (e.g., *Science Fiction*, *History*, *Philosophy*).
-- **Delete Category Safeguard:** Similarly to authors, categories with existing books are protected from accidental removal.
+- View category cards with genre badges and book counts.
+- Click **View Books** on any category card to filter the catalog by that genre.
+- Click **+ Add Category** to register new categories (e.g., *Science Fiction*, *Philosophy*, *Biography*).
+- **Delete Safeguard:** Categories with linked books are protected from accidental removal.
 
 ---
 
@@ -137,37 +158,44 @@ bin/ci
 
 The application follows RESTful Rails resource conventions:
 
-| HTTP Verb | Path | Controller#Action | Description |
-| :--- | :--- | :--- | :--- |
-| **GET** | `/` | `books#index` | Application homepage / book list |
-| **GET** | `/books` | `books#index` | Master book catalog with search parameters |
-| **GET** | `/books/new` | `books#new` | New book creation form |
-| **POST** | `/books` | `books#create` | Persists a new book record |
-| **GET** | `/books/:id` | `books#show` | Detailed view for a single book |
-| **GET** | `/books/:id/edit` | `books#edit` | Book modification form |
-| **PATCH/PUT** | `/books/:id` | `books#update` | Updates an existing book |
-| **DELETE** | `/books/:id` | `books#destroy` | Deletes a book record |
-| **GET** | `/authors` | `authors#index` | Directory of authors with book counts |
-| **GET** | `/authors/new` | `authors#new` | Author creation form |
-| **POST** | `/authors` | `authors#create` | Persists a new author |
-| **DELETE** | `/authors/:id` | `authors#destroy` | Safely removes an author (if unlinked) |
-| **GET** | `/categories` | `categories#index` | Directory of categories with book counts |
-| **GET** | `/categories/new` | `categories#new` | Category creation form |
-| **POST** | `/categories` | `categories#create` | Persists a new category |
-| **DELETE** | `/categories/:id` | `categories#destroy` | Safely removes a category (if unlinked) |
+| HTTP Verb | Path | Controller#Action | Access Level | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| **GET** | `/` | `books#index` | Public | Homepage / book catalog |
+| **GET** | `/books` | `books#index` | Public | Master book catalog with search parameters |
+| **GET** | `/books/new` | `books#new` | Authenticated | New book creation form |
+| **POST** | `/books` | `books#create` | Authenticated | Persists a new book record |
+| **GET** | `/books/:id` | `books#show` | Public | 2-column detailed showcase view |
+| **GET** | `/books/:id/edit` | `books#edit` | Authenticated | Book modification form |
+| **PATCH/PUT** | `/books/:id` | `books#update` | Authenticated | Updates an existing book |
+| **DELETE** | `/books/:id` | `books#destroy` | Authenticated | Deletes a book record |
+| **GET** | `/authors` | `authors#index` | Public | Directory of authors with book counts |
+| **GET** | `/authors/new` | `authors#new` | Authenticated | Author creation form |
+| **POST** | `/authors` | `authors#create` | Authenticated | Persists a new author |
+| **DELETE** | `/authors/:id` | `authors#destroy` | Authenticated | Safely removes an author (if unlinked) |
+| **GET** | `/categories` | `categories#index` | Public | Directory of categories with book counts |
+| **GET** | `/categories/new` | `categories#new` | Authenticated | Category creation form |
+| **POST** | `/categories` | `categories#create` | Authenticated | Persists a new category |
+| **DELETE** | `/categories/:id` | `categories#destroy` | Authenticated | Safely removes a category (if unlinked) |
+| **GET** | `/users/new` | `users#new` | Public | User account sign-up form |
+| **POST** | `/users` | `users#create` | Public | Registers user and starts session |
+| **GET** | `/session/new` | `sessions#new` | Public | Sign-in authentication form |
+| **POST** | `/session` | `sessions#create` | Public | Authenticates credentials and issues cookie |
+| **DELETE** | `/session` | `sessions#destroy` | Authenticated | Terminates user session |
+| **GET** | `/passwords/new` | `passwords#new` | Public | Password reset request form |
+| **POST** | `/passwords` | `passwords#create` | Public | Dispatches reset instructions email |
+| **GET** | `/passwords/:token/edit` | `passwords#edit` | Public | Password reset form with token verification |
+| **PATCH/PUT** | `/passwords/:token` | `passwords#update` | Public | Sets new password and clears sessions |
 
 ---
 
 ## 5. Deployment & Production Operations
 
 ### 5.1 Docker Container Deployment
-The application includes a production-ready, multi-stage `Dockerfile`:
-
 ```bash
 # 1. Build the production Docker container
 docker build -t book_library:latest .
 
-# 2. Run the container with master key and port mapping
+# 2. Run the container with master key and storage volume mapping
 docker run -d \
   -p 80:80 \
   -e RAILS_MASTER_KEY="$(cat config/master.key)" \
@@ -190,11 +218,17 @@ bin/kamal deploy
 
 ## 6. Frequently Asked Questions (FAQ)
 
-#### Q: Why can't I delete an author or category?
-**A:** This is an intentional data safety mechanism configured in `app/models/author.rb` and `app/models/category.rb` (`dependent: :restrict_with_error`). To delete an author or category, you must first delete or reassign all books linked to it.
+#### Q: Do I need to create an account to browse the library?
+**A:** No. Browsing books, viewing individual book details, searching, and viewing authors or categories are publicly accessible to all visitors. Creating an account or signing in is only required when you want to add, edit, or delete catalog records.
 
-#### Q: How is search handled?
-**A:** Search runs server-side through parameterized Active Record queries on `Book#title`, `Book#author_id`, and `Book#category_id`. Searching is instant, sanitizes inputs, and avoids client-side memory overhead.
+#### Q: Why can't I delete an author or category?
+**A:** This is an intentional data safety mechanism configured in `app/models/author.rb` and `app/models/category.rb` (`dependent: :restrict_with_error`). To delete an author or category, you must first reassign or delete all books associated with it.
+
+#### Q: How does password recovery work?
+**A:** Password resets use Rails 8 `generates_token_for :password_reset`. When requested, a signed token is generated with a 15-minute expiration window. The token is tied to your password salt, meaning once a password is changed, all previous reset links immediately become invalid.
+
+#### Q: How does search handle special characters?
+**A:** Search inputs are sanitized using `ActiveRecord::Base.sanitize_sql_like`, ensuring that wildcards such as `%` or `_` are treated as literal characters and parameterized Active Record queries prevent SQL injection.
 
 #### Q: What happens if I enter a duplicate ISBN?
-**A:** Active Record enforces uniqueness on the `isbn` attribute (`validates :isbn, presence: true, uniqueness: true`). The submission will be rejected with an inline validation alert explaining that the ISBN has already been taken.
+**A:** Both the database schema and Active Record model enforce uniqueness on `isbn` (`validates :isbn, presence: true, uniqueness: true`). A submission with a duplicate ISBN is safely rejected with an inline validation alert.

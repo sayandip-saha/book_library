@@ -2,21 +2,25 @@
 
 ## 1. Technical Stack & Dependencies
 
-The application is engineered on the modern **Ruby on Rails 8** framework, leveraging Rails 8 defaults for zero-dependency frontend pipelines, SQLite-backed services, and production acceleration.
+The application is engineered on **Ruby on Rails 8**, leveraging modern defaults for zero-dependency frontend pipelines, SQLite-backed services, and production container acceleration.
 
 | Component | Technology | Version / Specification |
 | :--- | :--- | :--- |
 | **Language** | Ruby | `3.4.10` (defined in `.ruby-version`) |
 | **Web Framework** | Ruby on Rails | `~> 8.1.3` (Rails 8.1) |
 | **Database** | SQLite3 | `>= 2.1` with WAL mode support |
+| **Authentication** | Rails 8 Built-in Auth | `has_secure_password` via `bcrypt (~> 3.1.7)` |
+| **Session Tracking** | Active Record & Signed Cookies | Database-backed sessions via `Current.session` |
+| **Rate Limiter** | Rails 8 Controller Rate Limiting | IP-based request throttling on auth endpoints |
 | **App Server** | Puma | `>= 5.0` |
 | **Web Accelerator** | Thruster | HTTP caching, gzip/brotli compression, X-Sendfile |
-| **Asset Pipeline** | Propshaft | Modern asset packaging (no Webpack/Node build step required) |
-| **JavaScript Delivery** | Importmap-rails | Native ES modules delivered via browser import maps |
-| **Frontend Frameworks**| Turbo & Stimulus | Hotwire standard suite (`turbo-rails`, `stimulus-rails`) |
-| **Background & Queue** | Solid Queue | DB-backed background processing (`solid_queue`) |
-| **Cache Store** | Solid Cache | DB-backed key-value caching (`solid_cache`) |
-| **Action Cable** | Solid Cable | DB-backed real-time websockets (`solid_cable`) |
+| **Asset Pipeline** | Propshaft | Zero-build modern asset delivery (`application.css` & `app.css`) |
+| **JavaScript Delivery** | Importmap-rails | Native browser ES modules (no Node/Webpack required) |
+| **Typography** | Google Fonts | `Plus Jakarta Sans` (body) & `Outfit` (headings) |
+| **Frontend Utilities** | Turbo & Stimulus | Hotwire standard suite (`turbo-rails`, `stimulus-rails`) |
+| **Background & Queue** | Solid Queue | Database-backed asynchronous queue (`solid_queue`) |
+| **Cache Store** | Solid Cache | Database-backed key-value caching (`solid_cache`) |
+| **Action Cable** | Solid Cable | Database-backed real-time websockets (`solid_cable`) |
 | **Deployment Engine** | Kamal & Docker | Multi-stage slim Docker image with non-root runtime |
 
 ---
@@ -26,30 +30,40 @@ The application is engineered on the modern **Ruby on Rails 8** framework, lever
 ### 2.1 Entity Relationship Diagram (ERD)
 
 ```
-       +-----------------------+
-       |        authors        |
-       +-----------------------+
-       | id: integer (PK)      |
-       | name: string          |
-       | created_at: datetime  |
-       | updated_at: datetime  |
-       +-----------+-----------+
-                   | 1
-                   |
-                   | has_many
-                   | restricts deletion
-                   v *
-       +-------------------------------+       * +-----------------------+
-       |             books             | <-------+      categories       |
-       +-------------------------------+ 1       +-----------------------+
-       | id: integer (PK)              |         | id: integer (PK)      |
-       | title: string                 |         | name: string          |
-       | isbn: string (unique)         |         | created_at: datetime  |
-       | publication_year: integer     |         | updated_at: datetime  |
-       | description: text             |         +-----------------------+
-       | available: boolean            |
-       | author_id: integer (FK)       |
+       +-----------------------+                   +-----------------------+
+       |        authors        |                   |         users         |
+       +-----------------------+                   +-----------------------+
+       | id: integer (PK)      |                   | id: integer (PK)      |
+       | name: string          |                   | email_address: string |
+       | created_at: datetime  |                   | password_digest: str  |
+       | updated_at: datetime  |                   | created_at: datetime  |
+       +-----------+-----------+                   | updated_at: datetime  |
+                   | 1                             +-----------+-----------+
+                   |                                           | 1
+                   | has_many                                  | has_many
+                   | restricts deletion                        | destroys
+                   v *                                         v *
+       +-------------------------------+           +-----------------------+
+       |             books             |           |       sessions        |
+       +-------------------------------+           +-----------------------+
+       | id: integer (PK)              |           | id: integer (PK)      |
+       | title: string                 |           | user_id: integer (FK) |
+       | isbn: string (unique)         |           | ip_address: string    |
+       | publication_year: integer     |           | user_agent: string    |
+       | description: text             |           | created_at: datetime  |
+       | available: boolean            |           | updated_at: datetime  |
+       | author_id: integer (FK)       |           +-----------------------+
        | category_id: integer (FK)     |
+       | created_at: datetime          |
+       | updated_at: datetime          |
+       +---------------+---------------+
+                       ^ *
+                       | 1 has_many (restricts deletion)
+       +---------------+---------------+
+       |          categories           |
+       +-------------------------------+
+       | id: integer (PK)              |
+       | name: string                  |
        | created_at: datetime          |
        | updated_at: datetime          |
        +-------------------------------+
@@ -57,48 +71,80 @@ The application is engineered on the modern **Ruby on Rails 8** framework, lever
 
 ### 2.2 Table Definitions (`db/schema.rb`)
 
-#### Table: `authors`
+#### Table: `users`
 - `id` (INTEGER, Primary Key, Auto-increment)
-- `name` (STRING)
-- `created_at` (DATETIME, NOT NULL)
-- `updated_at` (DATETIME, NOT NULL)
+- `email_address` (STRING, NOT NULL, UNIQUE index)
+- `password_digest` (STRING, NOT NULL)
+- `created_at`, `updated_at` (DATETIME, NOT NULL)
 
-#### Table: `categories`
+#### Table: `sessions`
 - `id` (INTEGER, Primary Key, Auto-increment)
-- `name` (STRING)
-- `created_at` (DATETIME, NOT NULL)
-- `updated_at` (DATETIME, NOT NULL)
+- `user_id` (INTEGER, NOT NULL, Foreign Key referencing `users.id`)
+- `ip_address` (STRING)
+- `user_agent` (STRING)
+- `created_at`, `updated_at` (DATETIME, NOT NULL)
 
 #### Table: `books`
 - `id` (INTEGER, Primary Key, Auto-increment)
 - `title` (STRING)
-- `isbn` (STRING)
+- `isbn` (STRING, UNIQUE)
 - `publication_year` (INTEGER)
 - `description` (TEXT)
 - `available` (BOOLEAN)
 - `author_id` (INTEGER, Foreign Key referencing `authors.id`)
 - `category_id` (INTEGER, Foreign Key referencing `categories.id`)
-- `created_at` (DATETIME, NOT NULL)
-- `updated_at` (DATETIME, NOT NULL)
-- **Indices:**
-  - `index_books_on_author_id` on `author_id`
-  - `index_books_on_category_id` on `category_id`
-- **Foreign Keys:**
-  - `add_foreign_key "books", "authors"`
-  - `add_foreign_key "books", "categories"`
+- `created_at`, `updated_at` (DATETIME, NOT NULL)
+
+#### Table: `authors` & `categories`
+- `id` (INTEGER, Primary Key, Auto-increment)
+- `name` (STRING)
+- `created_at`, `updated_at` (DATETIME, NOT NULL)
 
 ### 2.3 Migration History
-
-1. `20261006054941_create_books.rb` — Initial books table creation (title, isbn, publication_year, description, available).
-2. `20261006055100_create_authors.rb` — Authors table creation (name).
-3. `20261006055128_create_categories.rb` — Categories table creation (name).
-4. `20261006055251_add_author_and_category_to_books.rb` — Adds `author_id` and `category_id` foreign key references and indices to `books`.
+1. `20261006054941_create_books.rb` — Base books table.
+2. `20261006055100_create_authors.rb` — Base authors table.
+3. `20261006055128_create_categories.rb` — Base categories table.
+4. `20261006055251_add_author_and_category_to_books.rb` — Foreign keys and indices for authors/categories on books.
+5. `20261012042108_create_users.rb` — Users table with unique email index.
+6. `20261012042109_create_sessions.rb` — Sessions table linked to users.
 
 ---
 
 ## 3. Model Layer Implementation
 
-### 3.1 `Book` (`app/models/book.rb`)
+### 3.1 `User` (`app/models/user.rb`)
+```ruby
+class User < ApplicationRecord
+  has_secure_password
+  has_many :sessions, dependent: :destroy
+
+  normalizes :email_address, with: ->(e) { e.strip.downcase }
+
+  validates :email_address, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
+
+  generates_token_for :password_reset, expires_in: 15.minutes do
+    password_salt&.last(10)
+  end
+end
+```
+- **Password Security:** Salted and hashed using BCrypt.
+- **Email Normalization & Validation:** Strips whitespace, converts to lowercase, and validates RFC 5322 email syntax.
+- **Token Generation:** Produces time-limited (15 minutes) signed tokens tied to the password salt.
+
+### 3.2 `Session` & `Current` (`app/models/session.rb`, `app/models/current.rb`)
+```ruby
+class Session < ApplicationRecord
+  belongs_to :user
+end
+
+class Current < ActiveSupport::CurrentAttributes
+  attribute :session
+  delegate :user, to: :session, allow_nil: true
+end
+```
+- Provides thread-safe, request-isolated access to `Current.session` and `Current.user`.
+
+### 3.3 `Book` (`app/models/book.rb`)
 ```ruby
 class Book < ApplicationRecord
   belongs_to :author
@@ -109,28 +155,20 @@ class Book < ApplicationRecord
   validates :publication_year, presence: true
 end
 ```
-- **Associations:** Requires valid foreign keys for both `Author` and `Category`.
-- **Validations:** Ensures `title`, `isbn`, and `publication_year` are never blank; enforces that ISBN values are globally distinct.
 
-### 3.2 `Author` (`app/models/author.rb`)
+### 3.4 `Author` & `Category` (`app/models/author.rb`, `app/models/category.rb`)
 ```ruby
 class Author < ApplicationRecord
   has_many :books, dependent: :restrict_with_error
-
   validates :name, presence: true
 end
-```
-- **Safety Mechanism:** `dependent: :restrict_with_error` prevents accidental cascade deletion of authors who have books currently in the library.
 
-### 3.3 `Category` (`app/models/category.rb`)
-```ruby
 class Category < ApplicationRecord
   has_many :books, dependent: :restrict_with_error
-
   validates :name, presence: true
 end
 ```
-- **Safety Mechanism:** Same deletion restriction preserves catalog integrity when categories have associated books.
+- **Integrity Safeguard:** `dependent: :restrict_with_error` prevents accidental cascading deletes when books remain associated.
 
 ---
 
@@ -139,134 +177,104 @@ end
 ### 4.1 Route Declarations (`config/routes.rb`)
 ```ruby
 Rails.application.routes.draw do
+  resource :session
+  resources :passwords, param: :token
   resources :books
   resources :authors, only: [:index, :new, :create, :destroy]
   resources :categories, only: [:index, :new, :create, :destroy]
+  resources :users, only: %i[new create]
 
   root "books#index"
 end
 ```
 
-### 4.2 `BooksController` (`app/controllers/books_controller.rb`)
-- **Index & Multi-Parameter Filter Action:**
-  ```ruby
-  def index
-    @books = Book.all
+### 4.2 `Authentication` Concern (`app/controllers/concerns/authentication.rb`)
+- Included in `ApplicationController`.
+- Enforces `before_action :require_authentication` globally.
+- Provides `allow_unauthenticated_access(**options)` for public actions.
+- Automatically stores `session[:return_to_after_authenticating]` to return users to their intended page upon login.
 
-    if params[:query].present?
-      @books = @books.where("title LIKE ?", "%#{params[:query]}%")
-    end
-
-    if params[:author_id].present?
-      @books = @books.where(author_id: params[:author_id])
-    end
-
-    if params[:category_id].present?
-      @books = @books.where(category_id: params[:category_id])
-    end
-
-    @books = @books.order(title: :asc)
-    @authors = Author.order(:name)
-    @categories = Category.order(:name)
-
-    @book_count = Book.count
-    @author_count = Author.count
-    @category_count = Category.count
-  end
-  ```
-  - Employs parameterized SQL queries (`?`) to prevent SQL injection vulnerabilities.
-  - Returns counts for collection-level summary stat widgets.
-- **Rails 8 Strong Parameters:**
-  ```ruby
-  def book_params
-    params.expect(
-      book: [
-        :title,
-        :isbn,
-        :publication_year,
-        :description,
-        :available,
-        :author_id,
-        :category_id
-      ]
-    )
-  end
-  ```
-  - Uses the Rails 8 `params.expect` syntax for strong typing and explicit parameter filtering.
-
-### 4.3 `AuthorsController` & `CategoriesController`
-- Handles collection index, creation, and secure deletion.
-- Returns user-friendly alerts when an author or category cannot be deleted due to associated books:
-  ```ruby
-  def destroy
-    @author = Author.find(params[:id])
-    if @author.destroy
-      redirect_to authors_path, notice: "Author deleted successfully."
-    else
-      redirect_to authors_path, alert: @author.errors.full_messages.to_sentence
-    end
-  end
-  ```
+### 4.3 Controller Permissions & Optimization
+- **`BooksController`:**
+  - Publicly accessible: `allow_unauthenticated_access only: %i[ index show ]`.
+  - Mutating actions (`new`, `create`, `edit`, `update`, `destroy`) require authentication.
+  - **N+1 Optimization:** Uses `@books = Book.includes(:author, :category)`.
+  - **Sanitized Search:** Uses `ActiveRecord::Base.sanitize_sql_like(params[:query])` to prevent SQL wildcard attacks.
+- **`AuthorsController` & `CategoriesController`:**
+  - Public index: `allow_unauthenticated_access only: %i[ index ]`.
+  - Eager loads books count: `includes(:books)` to eliminate loop query overhead.
+- **`SessionsController`:**
+  - Rate-limited: `rate_limit to: 10, within: 3.minutes, only: :create`.
+  - Issues signed permanent cookies: `cookies.signed.permanent[:session_id]`.
+- **`PasswordsController` & `PasswordsMailer`:**
+  - Handles token-based password reset with expiring links and Action Mailer delivery.
 
 ---
 
 ## 5. Frontend & UI Architecture
 
-### 5.1 Design System & CSS Token Architecture
-The styling is implemented in `app/assets/stylesheets/application.css` without external CSS preprocessors, using pure CSS3 custom properties:
+### 5.1 Design System Tokens & Typography
+Implemented in `app/assets/stylesheets/application.css` (with `app.css` wrapper for Propshaft):
 
 ```css
 :root {
-  --bg: #080b14;
-  --bg-soft: #0f1322;
-  --card: rgba(20, 25, 42, 0.78);
-  --card-hover: rgba(28, 34, 56, 0.9);
-  --border: rgba(255, 255, 255, 0.09);
-  --text: #f4f7ff;
-  --text-muted: #98a2bd;
+  --bg: #070a13;
+  --bg-surface: #0e1322;
+  --card: rgba(18, 24, 40, 0.75);
+  --card-hover: rgba(26, 33, 56, 0.9);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-focus: rgba(139, 92, 246, 0.55);
+
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+
   --primary: #8b5cf6;
-  --primary-light: #a78bfa;
-  --cyan: #22d3ee;
-  --success: #34d399;
-  --danger: #fb7185;
-  --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-  --radius: 20px;
+  --primary-glow: rgba(139, 92, 246, 0.28);
+  --cyan: #06b6d4;
+  --emerald: #10b981;
+  --rose: #f43f5e;
+  --amber: #f59e0b;
 }
 ```
 
 ### 5.2 UI Components
-1. **Sticky Glassmorphism Navbar:** Backdrop filter blur (`backdrop-filter: blur(18px)`) with glowing brand badge and navigation links.
-2. **Dashboard Stats Grid:** Responsive 3-column metric cards showing real-time counts for Books, Authors, and Categories.
-3. **Filter & Search Panel:** Multi-input filter row for real-time text query and dropdown filters with "Search" and "Clear Filters" actions.
-4. **Book Card Grid:** Glassmorphic card design with hover elevation (`transform: translateY(-8px)`), radial lighting accents, status badges, and action shortcuts.
-5. **Form Architecture:** Dark-themed inputs with focus halos (`box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1)`), formatted validation error boxes, and cancel fallbacks.
-6. **Detailed Show View:** Split info grid showing ISBN, Author, Category, Publication Year, Availability status, and full synopsis.
+1. **Glassmorphism Navbar:** Sticky header with backdrop blur (`blur(20px)`), brand icon badge (`📚`), active page tab indicator, and user profile pill (`.user-pill`) showing the logged-in email.
+2. **Hero Header & Pulse Badge:** Clean collection showcase with a live pulsating dot (`● Personal Library Catalog`) and gradient typography.
+3. **Color-Coded Metrics:** 3-column stats cards with dedicated glow accents (Books = Violet, Authors = Cyan, Categories = Amber).
+4. **Command-Center Search Panel:** Integrated title search with input icon, custom dropdown selectors, live result counter, and active filter clear shortcut.
+5. **3D Book Cards:** Book cards featuring category genre pill, glowing circulation status indicator (`● Available` / `● Borrowed`), 3D cover spine mockup, author monogram avatar, synopsis snippet, and action shortcuts.
+6. **2-Column Detailed Showcase (`show.html.erb`):** Left presentation column with 3D cover card, year emblem, and ISBN barcode; right column with author strip, specification grid, and reading synopsis box.
+7. **Custom Toggle Card:** Clean slide-toggle for availability status instead of standard checkboxes.
+8. **Global Flash Notifications:** Glassmorphic notification banners (`.alert-success` with green accent, `.alert-danger` with rose accent).
 
 ---
 
 ## 6. Security & Data Integrity
 
-1. **SQL Injection Prevention:** All dynamic queries use parameterized active record queries (`@books.where("title LIKE ?", "%#{query}%")`).
-2. **Cross-Site Request Forgery (CSRF):** Standard Rails authenticity token protection via `<%= csrf_meta_tags %>` and Rails form helpers (`form_with`, `button_to`).
-3. **Content Security Policy (CSP):** Initializer configured in `config/initializers/content_security_policy.rb`.
-4. **Foreign Key Integrity:** Database-level foreign keys (`add_foreign_key`) combined with Rails `dependent: :restrict_with_error`.
-5. **Strong Parameter Whitelisting:** Using Rails 8 `params.expect` prevents mass assignment vulnerabilities.
+1. **Password Hashing:** Industry-standard BCrypt cost-factor hashing via `has_secure_password`.
+2. **Session Security:** Cryptographically signed, HTTP-only, `same_site: :lax` session cookies.
+3. **Rate Limiting:** Protects `/session` and `/passwords` from credential stuffing and brute-force attacks.
+4. **SQL Injection Prevention:** Parameterized SQL queries and `sanitize_sql_like` parameter cleaning.
+5. **Cross-Site Request Forgery (CSRF):** Standard Rails authenticity tokens validated across all non-GET requests.
+6. **Content Security Policy (CSP):** Enforced via `config/initializers/content_security_policy.rb`.
+7. **Foreign Key Integrity:** Database constraints (`add_foreign_key`) paired with Active Record deletion locks (`dependent: :restrict_with_error`).
 
 ---
 
 ## 7. Containerization & Production Deployment
 
-### 7.1 Docker Multi-Stage Architecture (`Dockerfile`)
-- **Base Layer:** `docker.io/library/ruby:3.4.10-slim`, installs `jemalloc2`, `sqlite3`, and `libvips`.
-- **Build Layer:** Installs compilation packages (`build-essential`, `pkg-config`), runs `bundle install`, precompiles `bootsnap` cache, and executes `./bin/rails assets:precompile`.
-- **Runtime Layer:** Creates non-root system user `rails:rails` (UID 1000) for security hardening.
-- **Web Acceleration:** Starts via Thruster (`./bin/thrust ./bin/rails server`) on port 80.
+### 7.1 Dockerfile Specification
+- **Base:** `docker.io/library/ruby:3.4.10-slim` with `jemalloc2`, `sqlite3`, and `libvips`.
+- **Multi-Stage Build:** Dependencies compiled in build stage, copied to slim runtime image.
+- **Bootsnap Cache:** Precompiled bootsnap cache for instantaneous container boot.
+- **Web Acceleration:** Served via Thruster (`./bin/thrust ./bin/rails server`) on port 80.
+- **Security Hardening:** Runs under unprivileged `rails:rails` system user.
 
 ### 7.2 Entrypoint Workflow (`bin/docker-entrypoint`)
-Prepares database on initial startup:
 ```bash
 if [ "${1}" = "./bin/rails" ] || [ "${1}" = "./bin/thrust" ]; then
   ./bin/rails db:prepare
 fi
 ```
-Ensures SQLite migrations are automatically applied on container startup.
+Ensures database creation and pending migrations are automatically executed upon container launch.
