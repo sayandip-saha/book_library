@@ -203,36 +203,36 @@
       const checkbox = document.getElementById("book_available");
       const badge = document.getElementById("availability_status_badge");
       const toggleCard = document.getElementById("toggle_availability_card");
+      const statusIcon = document.getElementById("toggle_status_icon");
+      const hintText = document.getElementById("toggle_hint_text");
 
       function updateAvailabilityUI() {
-        if (!checkbox || !badge) return;
-        if (checkbox.checked) {
-          badge.textContent = "● Available";
-          badge.className = "badge badge-success";
-          toggleCard.classList.add("is-available");
-          toggleCard.classList.remove("is-borrowed");
-        } else {
-          badge.textContent = "● Borrowed";
-          badge.className = "badge badge-danger";
-          toggleCard.classList.add("is-borrowed");
-          toggleCard.classList.remove("is-available");
+        if (!checkbox) return;
+        const isAvailable = checkbox.checked;
+
+        if (badge) {
+          badge.textContent = isAvailable ? "● Available in Library" : "● Currently Borrowed";
+          badge.className = `badge ${isAvailable ? "badge-success" : "badge-danger"}`;
+        }
+        if (statusIcon) {
+          statusIcon.textContent = isAvailable ? "📚" : "📦";
+        }
+        if (hintText) {
+          hintText.textContent = isAvailable
+            ? "Volume is currently on the shelf and ready to be borrowed by readers."
+            : "Volume is checked out or on loan to a reader.";
+        }
+        if (toggleCard) {
+          toggleCard.classList.toggle("is-available", isAvailable);
+          toggleCard.classList.toggle("is-borrowed", !isAvailable);
         }
       }
 
-      if (checkbox) {
+      if (checkbox && !checkbox.dataset.initialized) {
+        checkbox.dataset.initialized = "true";
         checkbox.addEventListener("change", updateAvailabilityUI);
-        updateAvailabilityUI();
       }
-
-      if (toggleCard) {
-        toggleCard.addEventListener("click", function(e) {
-          // If clicked outside checkbox and label elements, toggle the checkbox
-          if (e.target.tagName !== "INPUT" && e.target.tagName !== "LABEL" && !e.target.closest("label")) {
-            checkbox.checked = !checkbox.checked;
-            checkbox.dispatchEvent(new Event("change"));
-          }
-        });
-      }
+      updateAvailabilityUI();
 
       // 2. Open Library ISBN Lookup Interactivity
       const isbnInput = document.getElementById("openlibrary_isbn_input");

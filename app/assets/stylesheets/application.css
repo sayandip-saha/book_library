@@ -1472,114 +1472,185 @@ main {
 }
 
 /* =========================================================
-   CUSTOM TOGGLE CARD (FIXED INTERACTIVITY)
+   CUSTOM TOGGLE CARD (BULLET-PROOF SWITCH UI)
 ========================================================= */
 
 .toggle-card {
-  padding: 18px 22px;
-  border-radius: 14px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 24px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
   cursor: pointer;
-  transition: all 0.25s ease;
   user-select: none;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-bottom: 0;
 }
 
 .toggle-card:hover {
   background: rgba(255, 255, 255, 0.055);
-  border-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
 }
 
+/* Available State */
+.toggle-card:has(.toggle-checkbox:checked),
 .toggle-card.is-available {
-  border-color: rgba(16, 185, 129, 0.35);
-  background: rgba(16, 185, 129, 0.06);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.03) 100%);
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.12);
 }
 
+.toggle-card:has(.toggle-checkbox:checked):hover,
+.toggle-card.is-available:hover {
+  border-color: rgba(16, 185, 129, 0.6);
+  box-shadow: 0 6px 24px rgba(16, 185, 129, 0.2);
+}
+
+/* Borrowed / Checked-out State */
+.toggle-card:has(.toggle-checkbox:not(:checked)),
 .toggle-card.is-borrowed {
-  border-color: rgba(244, 63, 94, 0.3);
-  background: rgba(244, 63, 94, 0.05);
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.08) 0%, rgba(244, 63, 94, 0.03) 100%);
+  border-color: rgba(244, 63, 94, 0.35);
+  box-shadow: 0 4px 20px rgba(244, 63, 94, 0.1);
 }
 
-.toggle-container {
+.toggle-card:has(.toggle-checkbox:not(:checked)):hover,
+.toggle-card.is-borrowed:hover {
+  border-color: rgba(244, 63, 94, 0.55);
+  box-shadow: 0 6px 24px rgba(244, 63, 94, 0.18);
+}
+
+.toggle-card-main {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin: 0 !important;
-  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+}
+
+.toggle-status-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 1.35rem;
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+}
+
+.toggle-card:has(.toggle-checkbox:checked) .toggle-status-icon-box,
+.toggle-card.is-available .toggle-status-icon-box {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.toggle-card:has(.toggle-checkbox:not(:checked)) .toggle-status-icon-box,
+.toggle-card.is-borrowed .toggle-status-icon-box {
+  background: rgba(244, 63, 94, 0.16);
+  border-color: rgba(244, 63, 94, 0.35);
+}
+
+.toggle-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.toggle-header-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.toggle-title {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.toggle-hint-text {
+  font-size: 0.82rem;
+  color: var(--text-dim, #94a3b8);
+  line-height: 1.4;
+}
+
+/* Switch Controls */
+.toggle-switch-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .toggle-checkbox {
   position: absolute;
+  top: 0;
+  left: 0;
   opacity: 0;
-  width: 0;
-  height: 0;
-  pointer-events: auto;
-}
-
-.toggle-slider-label {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
+  width: 100%;
+  height: 100%;
   margin: 0;
+  pointer-events: none;
 }
 
-.toggle-slider {
-  width: 48px;
-  height: 26px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.18);
+.toggle-switch-pill {
   position: relative;
-  flex-shrink: 0;
+  display: inline-block;
+  width: 54px;
+  height: 30px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25);
   cursor: pointer;
-  transition: background 0.25s ease, box-shadow 0.25s ease;
 }
 
-.toggle-slider::before {
-  content: "";
+.toggle-switch-knob {
   position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 20px;
-  height: 20px;
+  top: 2px;
+  left: 2px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), 0 0 1px rgba(0, 0, 0, 0.2);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
 }
 
-.toggle-checkbox:checked + .toggle-slider-label .toggle-slider {
-  background: var(--emerald);
-  box-shadow: 0 0 14px var(--emerald-glow);
+/* Active / Checked State */
+.toggle-checkbox:checked + .toggle-switch-pill {
+  background: var(--emerald, #10b981);
+  border-color: #10b981;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.2);
 }
 
-.toggle-checkbox:checked + .toggle-slider-label .toggle-slider::before {
-  transform: translateX(22px);
+.toggle-checkbox:checked + .toggle-switch-pill .toggle-switch-knob {
+  transform: translateX(24px);
+  background: #ffffff;
 }
 
-.toggle-label-text {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  cursor: pointer;
-  margin: 0;
+/* Hover state on pill */
+.toggle-card:hover .toggle-switch-pill {
+  border-color: rgba(255, 255, 255, 0.35);
 }
 
-.toggle-title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.toggle-title-row strong {
-  font-size: 0.95rem;
-  color: #fff;
-}
-
-.toggle-label-text small {
-  font-size: 0.78rem;
-  color: var(--text-dim);
+.toggle-card:hover .toggle-checkbox:checked + .toggle-switch-pill {
+  border-color: #34d399;
 }
 
 .form-actions {
