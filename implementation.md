@@ -21,6 +21,7 @@ The application is engineered on **Ruby on Rails 8**, leveraging modern defaults
 | **Background & Queue** | Solid Queue | Database-backed asynchronous queue (`solid_queue`) |
 | **Cache Store** | Solid Cache | Database-backed key-value caching (`solid_cache`) |
 | **Action Cable** | Solid Cable | Database-backed real-time websockets (`solid_cable`) |
+| **Object Storage** | Active Storage & AWS S3 | `aws-sdk-s3` gem with local disk development fallback |
 | **Deployment Engine** | Kamal & Docker | Multi-stage slim Docker image with non-root runtime |
 
 ---
@@ -109,6 +110,7 @@ The application is engineered on **Ruby on Rails 8**, leveraging modern defaults
 5. `20261012042108_create_users.rb` — Users table with unique email index.
 6. `20261012042109_create_sessions.rb` — Sessions table linked to users.
 7. `20261016102000_add_cover_image_url_to_books.rb` — Add `cover_image_url` string column to `books`.
+8. `20261026080829_create_active_storage_tables.active_storage.rb` — Active Storage tables (`active_storage_blobs`, `active_storage_attachments`, `active_storage_variant_records`) for AWS S3 and file uploads.
 
 ---
 

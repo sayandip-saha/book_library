@@ -2,7 +2,7 @@ class BooksController < ApplicationController
   allow_unauthenticated_access only: %i[ index show lookup ]
 
   def index
-    @books = Book.includes(:author, :category)
+    @books = Book.includes(:author, :category).with_attached_cover_image
 
     if params[:query].present?
       sanitized_query = ActiveRecord::Base.sanitize_sql_like(params[:query])
@@ -104,7 +104,8 @@ class BooksController < ApplicationController
         :available,
         :author_id,
         :category_id,
-        :cover_image_url
+        :cover_image_url,
+        :cover_image
       ]
     )
   end

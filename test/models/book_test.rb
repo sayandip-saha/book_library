@@ -46,4 +46,15 @@ class BookTest < ActiveSupport::TestCase
     book = Book.new(isbn: "9780451524935")
     assert_equal "https://covers.openlibrary.org/b/isbn/9780451524935-L.jpg", book.cover_url
   end
+
+  test "cover_url returns blob path when cover_image is attached" do
+    book = books(:one)
+    book.cover_image.attach(
+      io: StringIO.new("fake image data"),
+      filename: "test_cover.jpg",
+      content_type: "image/jpeg"
+    )
+    assert book.cover_image.attached?
+    assert_includes book.cover_url, "test_cover.jpg"
+  end
 end

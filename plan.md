@@ -110,11 +110,12 @@ Phase 2: Authentication & Member Base [COMPLETE]
    └── Built-in Rails 8 auth, BCrypt password hashing, session cookies,
        rate limiting, password reset mailer, public vs protected permissions.
 
-Phase 3: Open Library API & Canonical Taxonomy Persistence [COMPLETE]
+Phase 3: Open Library API, Cover Art & AWS S3 Storage [COMPLETE]
    ├── OpenLibraryService for automated metadata, canonical genre detection, and high-res cover fetching
    ├── Real database persistence of Author and Category records during auto-fetch
-   ├── 1-click library import endpoint (POST /books/import) saving Book, Author, and Category directly
-   ├── Dedicated cover_image_url persistence and multi-level cover fallback
+   ├── Active Storage integration with AWS S3 (`aws-sdk-s3`) and local fallback
+   ├── Manual file upload for custom cover images (.jpg, .png, .webp) directly to AWS S3
+   ├── Automated background download & S3 attachment for Open Library covers
    └── 1-click availability status toggle on show page and fixed form switch.
 
 Phase 4: Circulation & Loan Ledger [NEXT]

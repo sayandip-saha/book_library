@@ -60,16 +60,15 @@ Under the header stats, use the **Filter Collection Command Bar**:
 1. Click **+ Add Book** in the navigation header or hero section.
 2. **Auto-Fill & Database Persistence with Open Library:**
    - In the **⚡ Quick Auto-Fill with Open Library** box at the top of the form, type or paste any 10-digit or 13-digit ISBN (e.g., `9780141439518`, `9780451524935`, `0451524934`, `9780132350884`).
-   - You have two convenient options:
-     - **Option A — 🔍 Fetch Details & Cover**: Queries the Open Library API, extracts the real author name and canonical genre/category (e.g., *Dystopian*, *Classics*, *Fantasy*, *Computer Science & Tech*), **automatically stores the author and category records into the database**, populates the form with valid database IDs, and renders a live cover preview. You can review/edit details before clicking **✨ Create Book Entry**.
-     - **Option B — 🚀 1-Click Save to Library**: In a single click, queries Open Library, stores the Author and Category in the database, saves the entire Book record directly to the database, and redirects straight to the new book showcase page!
-3. **Manual Entry & Adjustments:**
+   - Click **🔍 Fetch Details & Cover**: Queries the Open Library API, extracts the real author name and canonical genre/category (e.g., *Dystopian*, *Classics*, *Fantasy*, *Computer Science & Tech*), automatically stores the author and category records into the database, populates the form with valid database IDs, and renders a live cover preview. You can review and adjust any details before clicking **✨ Create Book Entry**.
+3. **Manual Entry & Cover Upload:**
+   - **Custom Cover Upload (AWS S3)**: Click the file picker under *Upload Custom Cover Image* to select a local image (.png, .jpg, .webp). The image is automatically uploaded and persisted directly to your **AWS S3 bucket**.
    - **Book Title** *(Required)*: The full title of the publication.
    - **Author** *(Required)*: Automatically linked to the stored author or choose from the dropdown.
    - **Category** *(Required)*: Automatically linked to the stored category or choose from the dropdown.
    - **ISBN** *(Required & Unique)*: The 10 or 13-digit International Standard Book Number.
    - **Publication Year** *(Required)*: Four-digit year of release (e.g., `2024`).
-   - **Cover Image URL**: Direct link to the high-resolution book cover image (pre-filled by Open Library).
+   - **Cover Image URL**: Pre-filled automatically by Open Library. If no custom file is uploaded, Rails streams this cover image directly into your AWS S3 bucket.
    - **Synopsis & Catalog Notes**: Summary, impressions, or jacket copy.
    - **Circulation Availability Toggle**: Responsive slider button. Toggling dynamically reflects `● Available` (emerald) or `● Borrowed` (coral).
 4. Click **✨ Create Book Entry**. An inline error banner highlights any missing or duplicate fields.

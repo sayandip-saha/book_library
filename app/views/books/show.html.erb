@@ -11,16 +11,23 @@
 
       <aside class="book-show-aside">
         <div class="book-cover-display">
-          <% if @book.cover_url.present? %>
+          <% if @book.cover_image.attached? %>
+            <div class="book-cover-image-wrapper">
+              <%= image_tag @book.cover_image,
+                    alt: "#{@book.title} Cover",
+                    class: "book-cover-real-img",
+                    onerror: "this.parentElement.style.display='none'; document.getElementById('book_cover_fallback').style.display='flex';" %>
+            </div>
+          <% elsif @book.cover_url.present? %>
             <div class="book-cover-image-wrapper">
               <img src="<%= @book.cover_url %>"
                    alt="<%= @book.title %> Cover"
                    class="book-cover-real-img"
-                   onerror="this.parentElement.style.display='none'; document.getElementById('book_cover_fallback').style.display='flex';">
+                   onerror="this.parentElement.style.display='none'; document.getElementById('book_cover_fallback').style.display='flex';" %>
             </div>
           <% end %>
 
-          <div id="book_cover_fallback" class="book-cover-fallback-content" style="<%= @book.cover_url.present? ? 'display: none;' : '' %>">
+          <div id="book_cover_fallback" class="book-cover-fallback-content" style="<%= (@book.cover_image.attached? || @book.cover_url.present?) ? 'display: none;' : '' %>">
             <div class="book-cover-spine"></div>
             <div class="book-cover-center">
               <span class="book-cover-emblem">📖</span>
