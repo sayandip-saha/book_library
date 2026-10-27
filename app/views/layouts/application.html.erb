@@ -31,6 +31,12 @@
           <%= link_to "Categories", categories_path, class: "nav-link #{'active' if current_page?(categories_path)}" %>
 
           <% if authenticated? %>
+            <% if Current.user&.admin? %>
+              <%= link_to "🛡️ Admin",
+                          admin_root_path,
+                          class: "nav-link #{'active' if request.path.start_with?('/admin')}" %>
+            <% end %>
+
             <%= link_to "+ Add Book",
                         new_book_path,
                         class: "nav-add-button" %>

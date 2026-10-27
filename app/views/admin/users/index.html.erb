@@ -1,0 +1,145 @@
+<div class="container admin-container">
+
+  <!-- Breadcrumb & Header -->
+  <header class="admin-header">
+    <div class="admin-header-main">
+      <%= link_to "← Back to Dashboard", admin_root_path, class: "back-nav-link mb-2" %>
+      <div class="admin-badge-pill">
+        <span class="admin-badge-dot"></span>
+        <span>User Directory & Permissions</span>
+      </div>
+      <h1 class="admin-title">Manage User Accounts</h1>
+      <p class="admin-subtitle">
+        Assign administrator privileges, review active reader sessions, and oversee library user access.
+      </p>
+    </div>
+
+    <div class="admin-header-actions">
+      <%= link_to "🛡️ Admin Dashboard", admin_root_path, class: "btn btn-secondary" %>
+      <%= link_to "📚 Public Catalog", root_path, class: "btn btn-secondary" %>
+    </div>
+  </header>
+
+  <!-- Create New User Panel -->
+  <section class="admin-panel mb-4" style="margin-bottom: 28px;">
+    <div class="admin-panel-header">
+      <div>
+        <h2 class="admin-panel-title">➕ Create New Account</h2>
+        <p class="admin-panel-desc">Add a new administrator or reader directly to the system</p>
+      </div>
+    </div>
+
+    <%= form_with model: [:admin, @new_user], class: "admin-create-user-form" do |f| %>
+      <div class="admin-user-form-grid">
+        <div class="form-group" style="margin-bottom: 0;">
+          <%= f.label :email_address, "Email Address" %>
+          <%= f.email_field :email_address, required: true, placeholder: "e.g. manager@booklibrary.com", class: "form-control" %>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <%= f.label :password, "Password" %>
+          <%= f.password_field :password, required: true, placeholder: "Minimum 8 characters", class: "form-control" %>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <%= f.label :password_confirmation, "Confirm Password" %>
+          <%= f.password_field :password_confirmation, required: true, placeholder: "Re-enter password", class: "form-control" %>
+        </div>
+      </div>
+
+      <div class="admin-user-form-bottom" style="display: flex; align-items: center; justify-content: space-between; margin-top: 18px; flex-wrap: wrap; gap: 16px;">
+        <label class="admin-checkbox-label" style="display: inline-flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;">
+          <%= f.check_box :admin, { checked: true, style: "width: 18px; height: 18px; accent-color: #8b5cf6;" }, "1", "0" %>
+          <span style="font-size: 0.9rem; font-weight: 600; color: #fff;">Grant Administrator Privileges (Full system access)</span>
+        </label>
+
+        <%= f.submit "✨ Create Account", class: "btn btn-primary btn-glow" %>
+      </div>
+    <% end %>
+  </section>
+
+  <!-- Users Table Panel -->
+  <section class="admin-panel">
+    <div class="admin-panel-header">
+      <div>
+        <h2 class="admin-panel-title">👥 Registered Users (<%= @users.count %>)</h2>
+        <p class="admin-panel-desc">All user accounts registered in the database</p>
+      </div>
+    </div>
+
+    <div class="admin-table-responsive">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>Active Sessions</th>
+            <th>Joined Date</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @users.each do |user| %>
+            <tr>
+              <td>
+                <div class="admin-user-cell">
+                  <div class="admin-user-avatar">
+                    <%= user.email_address.first.upcase %>
+                  </div>
+                  <div>
+                    <strong><%= user.email_address %></strong>
+                    <% if user == Current.user %>
+                      <span class="badge badge-mini badge-mini-current">Logged In As</span>
+                    <% end %>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <% if user.admin? %>
+                  <span class="badge badge-success">🛡️ Administrator</span>
+                <% else %>
+                  <span class="badge badge-secondary">Reader</span>
+                <% end %>
+              </td>
+              <td>
+                <span class="stat-submetric">
+                  <%= user.sessions.count %> <%= 'session'.pluralize(user.sessions.count) %>
+                </span>
+              </td>
+              <td>
+                <small class="admin-table-meta">
+                  <%= user.created_at.strftime("%B %d, %Y at %I:%M %p") %>
+                </small>
+              </td>
+              <td class="text-right">
+                <div class="admin-table-actions">
+                  <% if user != Current.user %>
+                    <%= button_to (user.admin? ? "Revoke Admin" : "Grant Admin"),
+                                  toggle_admin_admin_user_path(user),
+                                  method: :patch,
+                                  class: "btn btn-xs " + (user.admin? ? "btn-secondary" : "btn-primary"),
+                                  data: {
+                                    turbo_confirm: "Are you sure you want to change permissions for #{user.email_address}?"
+                                  } %>
+
+                    <%= button_to "Delete",
+                                  admin_user_path(user),
+                                  method: :delete,
+                                  class: "btn btn-xs btn-danger",
+                                  data: {
+                                    turbo_confirm: "Are you sure you want to delete #{user.email_address}? This will revoke their access and terminate all active sessions."
+                                  } %>
+                  <% else %>
+                    <span class="text-muted" style="font-size: 0.8rem;">Current Account</span>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+
